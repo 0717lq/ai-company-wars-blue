@@ -5,15 +5,39 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "fclean"
 version = "0.1.0"
-description = "A safe, colorful CLI tool to organize messy folders by file type"
+description = "A safe, colorful CLI tool to organize messy folders by file type — dry-run preview, undo rollback, rich output"
 readme = "README.md"
 requires-python = ">=3.9"
 license = {text = "MIT"}
-keywords = ["cleaner", "file-organizer", "cli", "utility"]
+keywords = [
+    "file-organizer",
+    "file-cleaner",
+    "cli",
+    "utility",
+    "downloads-organizer",
+    "file-management",
+    "filesystem",
+    "productivity",
+    "rich",
+    "dry-run",
+    "undo",
+    "fclean",
+    "folder-organizer",
+    "file-sorter",
+]
 classifiers = [
     "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
     "License :: OSI Approved :: MIT License",
     "Environment :: Console",
+    "Operating System :: OS Independent",
+    "Topic :: Utilities",
+    "Topic :: System :: Filesystems",
+    "Intended Audience :: End Users/Desktop",
+    "Intended Audience :: Developers",
 ]
 dependencies = [
     "rich>=13.0.0",
@@ -24,6 +48,10 @@ dev = [
     "pytest>=7.0",
     "pyfakefs>=5.0",
 ]
+
+[project.urls]
+Homepage = "https://github.com/0717lq/ai-company-wars-blue"
+BugTracker = "https://github.com/0717lq/ai-company-wars-blue/issues"
 
 [project.scripts]
 fclean = "fclean.cli:main"
