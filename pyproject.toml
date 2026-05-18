@@ -1,6 +1,6 @@
 [build-system]
-requires = ["setuptools>=68.0"]
-build-backend = "setuptools.backends._legacy:_Backend"
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
 
 [project]
 name = "fclean"
@@ -15,7 +15,15 @@ classifiers = [
     "License :: OSI Approved :: MIT License",
     "Environment :: Console",
 ]
-dependencies = []
+dependencies = [
+    "rich>=13.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+    "pyfakefs>=5.0",
+]
 
 [project.scripts]
 fclean = "fclean.cli:main"
