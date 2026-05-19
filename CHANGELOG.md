@@ -1,5 +1,41 @@
 # Changelog
 
+## [v0.3.0] — 2026-05-19 — Market-Ready
+
+### 🆕 新功能 / New Features
+- **Batch Rename**: `fclean rename "*.jpg" --pattern "vacation_{n:03d}"` — 批量重命名文件
+  - 支持模板变量: `{n}` (序列号), `{n:03d}` (补零), `{date}` (修改日期), `{ext}` (扩展名)
+  - 默认 dry-run 预览，加 `--execute` 执行
+  - 重命名操作可通过 `fclean --undo` 回滚
+  - 自动处理文件名冲突（添加数字后缀）
+  - Glob 模式匹配（`*.jpg`, `IMG_*.png` 等）
+- **Rename Undo 集成**: 重命名操作自动记录到 undo 系统，与 organize undo 共存
+
+### 📖 文档升级 / Documentation Upgrade
+- **中英双语 README**: 完整英文版 + 中文版，12KB+
+- **CI Badge**: GitHub Actions workflow badge 在 README 顶部
+- **对比表更新**: 增加 dirsort（红队项目）对比
+- **配置系统文档**: 详细说明 `.fcleanrc` 使用流程
+- **CONTRIBUTING.md**: 完整的开源贡献指南（中英双语）
+  - 项目结构说明、开发环境搭建、测试指南
+  - 代码风格（Ruff）、PR 流程、Commit 规范
+  - Issue 模板指南
+
+### 🧪 测试强化 / Test Improvements
+- **新增 test_renamer.py**: 33 个重命名测试用例
+  - 模板变量解析（{n}, {n:03d}, {date}, {ext}）
+  - Glob 匹配、排序、防冲突
+  - Unicode 文件名、空目录、权限错误
+- **新增 test_edge_cases.py**: 19 个边界情况测试
+  - 空目录整理、权限错误跳过
+  - 隐藏文件排除、Unicode 文件名
+  - 深层目录、超长文件名
+  - 重命名冲突处理
+- **CLI 测试新增**: rename 子命令参数解析测试
+
+### ⚙️ 工程化 / Engineering
+- 版本号更新至 v0.3.0
+
 ## [v0.2.0] — 2026-05-19 — 专业化与配置化
 
 ### 🆕 新增功能

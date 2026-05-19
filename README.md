@@ -1,7 +1,8 @@
 <p align="center">
   <img src="https://img.shields.io/badge/python-3.9+-blue.svg?style=for-the-badge&logo=python&logoColor=white" alt="Python 3.9+">
   <img src="https://img.shields.io/badge/license-MIT-green.svg?style=for-the-badge" alt="MIT License">
-  <img src="https://img.shields.io/badge/tests-53%20passed-brightgreen?style=for-the-badge" alt="Tests: 53 passed">
+  <img src="https://img.shields.io/github/actions/workflow/status/0717lq/ai-company-wars-blue/ci.yml?style=for-the-badge&logo=github" alt="CI">
+  <img src="https://img.shields.io/badge/coverage-%3E80%25-brightgreen?style=for-the-badge" alt="Coverage >80%">
   <img src="https://img.shields.io/badge/PRs-welcome-orange.svg?style=for-the-badge" alt="PRs Welcome">
 </p>
 
@@ -10,19 +11,124 @@
 </h1>
 
 <p align="center">
-  <strong>又安全又好看的命令行文件整理工具</strong><br>
-  <em>一条命令，把乱糟糟的文件夹整理得井井有条。</em>
+  <strong>Safe, beautiful CLI tool to organize messy folders by file type</strong><br>
+  <em>又安全又好看的命令行文件整理工具 — 一条命令，把乱糟糟的文件夹整理得井井有条。</em>
 </p>
 
 <p align="center">
-  <code>pip install fclean</code> • <code>fclean ~/Downloads</code> • <code>fclean --undo</code>
+  <code>pip install fclean</code> •
+  <code>fclean ~/Downloads</code> •
+  <code>fclean rename "*.jpg" --pattern "vacation_{n:03d}"</code> •
+  <code>fclean --undo</code>
 </p>
 
 ---
 
-## 📸 看看效果
+[![CI](https://github.com/0717lq/ai-company-wars-blue/actions/workflows/ci.yml/badge.svg)](https://github.com/0717lq/ai-company-wars-blue/actions/workflows/ci.yml)
+[![Python 3.9+](https://img.shields.io/badge/python-3.9%2B-blue)](https://www.python.org/downloads/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
 
+---
+
+## English / 🇬🇧 English Documentation
+
+### 📖 Overview
+
+**fclean** is a safe, colorful command-line tool that organizes messy folders by file type. It automatically scans your directory, categorizes files (images, documents, videos, audio, archives, code, and more), and moves them into organized subdirectories.
+
+**Design philosophy: Safety over speed.** fclean defaults to dry-run mode — you always preview before executing. Every operation is undoable with a single command.
+
+### ✨ Features
+
+| Feature | Description |
+|---------|------------|
+| 🛡️ **Safe by default** | Preview first (`dry-run`), execute with `--execute` |
+| ↩️ **One-click undo** | Every operation is logged; `fclean --undo` restores everything |
+| 🎨 **Beautiful output** | Rich color tables with categories and file sizes |
+| 🗂️ **Smart categorization** | 7 categories, 100+ file extensions auto-detected |
+| 📊 **Directory stats** | `fclean stats <path>` — file counts, sizes, categories |
+| 🔧 **Customizable** | `.fcleanrc` config file for custom rules and exclusions |
+| ✏️ **Batch rename** | `fclean rename "*.jpg" --pattern "vacation_{n:03d}"` |
+| ⚡ **Zero config** | Works out of the box, no setup needed |
+
+### 🚀 Installation
+
+```bash
+# Recommended: pip install
+pip install fclean
+
+# Or from source
+git clone https://github.com/0717lq/ai-company-wars-blue.git
+cd ai-company-wars-blue
+pip install -e .
+
+# Dev mode (with test dependencies)
+pip install -e ".[dev]"
 ```
+
+### 💻 Usage
+
+#### Quick Start — 3 Steps
+
+```bash
+# Step 1: Preview what will happen (dry-run, safe!)
+fclean ~/Downloads
+
+# Step 2: Confirm and execute
+fclean ~/Downloads --execute
+
+# Step 3 (optional): Made a mistake? One-click undo
+fclean --undo
+```
+
+#### All Commands
+
+| Command | Description |
+|---------|-------------|
+| `fclean <path>` | Preview organizing files in a directory |
+| `fclean <path> --execute` | Execute the organization |
+| `fclean init` | Generate `.fcleanrc` configuration |
+| `fclean init --global` | Generate config to `~/.fcleanrc` |
+| `fclean stats <path>` | Show directory file statistics |
+| `fclean config` | Display current configuration |
+| `fclean rename "*.jpg" --pattern "vacation_{n:03d}"` | Preview batch rename |
+| `fclean rename "*.jpg" --pattern "vacation_{n:03d}" --execute` | Execute batch rename |
+| `fclean --undo` | Rollback last operation |
+| `fclean --history` | View undo history |
+
+#### Batch Rename
+
+```bash
+# Preview (default dry-run)
+fclean rename "*.jpg" --pattern "vacation_{n:03d}"
+
+# Output:
+# 📋 Rename Preview (dry-run)
+# ┌──────────────────────┬──────────────────────────┐
+# │ 旧文件名              │ 新文件名                  │
+# ├──────────────────────┼──────────────────────────┤
+# │ photo_001.jpg        │ vacation_001.jpg         │
+# │ beach_2024.jpg       │ vacation_002.jpg         │
+# └──────────────────────┴──────────────────────────┘
+# 将重命名 2 个文件
+# 提示: 加 --execute 执行重命名
+
+# Execute (also undoable!)
+fclean rename "*.jpg" --pattern "vacation_{n:03d}" --execute
+```
+
+**Pattern variables:**
+
+| Variable | Description | Example |
+|----------|-------------|---------|
+| `{n}` | Sequential number (1-based) | `1`, `2`, `3` |
+| `{n:03d}` | Zero-padded number | `001`, `002`, `003` |
+| `{date}` | File modification date | `2026-05-19` |
+| `{ext}` | Original extension | `.jpg`, `.png` |
+
+#### Example
+
+```bash
 $ fclean ~/Downloads
 
 🔍 fclean — Dry Run 预览 (不会实际移动)
@@ -35,7 +141,6 @@ $ fclean ~/Downloads
 │ photo_2024.jpg       │  2.3MB   │
 │ screenshot.png       │  1.1MB   │
 │ logo_design.svg      │  45.2KB  │
-│ ...                  │          │
 └──────────────────────┴──────────┘
 
 📁 文档
@@ -45,28 +150,149 @@ $ fclean ~/Downloads
 │ report.pdf           │  3.2MB   │
 │ meeting_notes.docx   │  128.5KB │
 │ README.txt           │  4.1KB   │
-│ ...                  │          │
 └──────────────────────┴──────────┘
-
-📁 视频  📁 音频  📁 压缩包  📁 代码  📁 其他
 
 总计: 将移动 128 个文件 (156.3MB)
 提示: 加 --execute 执行整理
 ```
 
-## ✨ 特性一览
+### ⚙️ Configuration
+
+fclean supports custom configuration via `.fcleanrc` (YAML format).
+
+```bash
+# Generate a config file in the current directory
+fclean init
+
+# Or generate a global config in ~/
+fclean init --global
+```
+
+**Config priority:** CLI arguments > `.fcleanrc` > default rules
+
+**Example `.fcleanrc`:**
+
+```yaml
+rules:
+  - category: 图片
+    extensions:
+      - .jpg
+      - .jpeg
+      - .png
+      - .gif
+      - .webp
+      - .svg
+
+  - category: 文档
+    extensions:
+      - .pdf
+      - .docx
+      - .txt
+      - .md
+
+exclude_patterns:
+  - "*.tmp"
+  - "*.log"
+
+exclude_dirs:
+  - node_modules
+  - __pycache__
+```
+
+View your current configuration anytime:
+
+```bash
+fclean config
+```
+
+### 📦 Supported File Types
+
+| Category | Extensions |
+|----------|-----------|
+| 🖼️ Images | `.jpg` `.jpeg` `.png` `.gif` `.svg` `.webp` `.bmp` `.ico` `.tiff` `.heic` `.avif` |
+| 📄 Documents | `.pdf` `.doc` `.docx` `.xls` `.xlsx` `.ppt` `.pptx` `.txt` `.md` `.csv` `.epub` `.mobi` |
+| 🎬 Videos | `.mp4` `.avi` `.mkv` `.mov` `.wmv` `.flv` `.webm` `.m4v` `.3gp` `.mpeg` |
+| 🎵 Audio | `.mp3` `.wav` `.flac` `.aac` `.ogg` `.wma` `.m4a` `.opus` |
+| 📦 Archives | `.zip` `.rar` `.7z` `.tar` `.gz` `.bz2` `.xz` `.zst` `.tgz` |
+| 💻 Code | `.py` `.js` `.ts` `.html` `.css` `.java` `.cpp` `.go` `.rs` `.rb` `.php` `.yaml` `.json` `.toml` |
+| ❓ Other | Any extension not listed above |
+
+### 🤔 Why fclean?
+
+| Feature | 🧹 **fclean** | `dirsort` (Red Team) | `organize-cli` | Manual |
+|---------|:---:|:---:|:---:|:---:|
+| Dry-run preview | ✅ **Default** | ✅ Default | ✅ | ❌ |
+| One-click undo (organize) | ✅ **Built-in** | ❌ | ❌ | ❌ |
+| One-click undo (rename) | ✅ **Built-in** | ❌ | ❌ | ❌ |
+| Batch rename | ✅ **New in v0.3.0** | ❌ | ❌ | — |
+| Rich color output | ✅ **Exclusive** | ❌ | ❌ | ❌ |
+| Chinese directory names | ✅ **Exclusive** | ❌ | ❌ | ❌ |
+| Config system (`.fcleanrc`) | ✅ **Yes** | ❌ | ✅ | — |
+| Directory stats | ✅ **Yes** | ❌ | ❌ | — |
+| Zero config out of box | ✅ **Yes** | ✅ | ❌ | — |
+| Safety-first design | ✅ **Default dry-run** | ⚠️ Dry-run exists | ⚠️ | ❌ |
+| Number of subcommands | **5 🏆** | 1 | ~8 | — |
+| Test coverage | **>80%** | Good | Moderate | — |
+
+### 🧪 Development
+
+```bash
+# Install dev dependencies
+pip install -e ".[dev]"
+
+# Run all tests
+pytest tests/ -v
+
+# Run with coverage
+pytest tests/ --cov=src/fclean -v
+
+# Code linting
+ruff check src/
+
+# Check coding style
+ruff format --check src/
+```
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed contribution guidelines.
+
+### 📄 License
+
+[MIT License](LICENSE) — Free to use, modify, and distribute.
+
+---
+
+<p align="center">
+  <b>fclean</b> — 安全第一，拒绝手滑 / Safety first, no regrets<br>
+  <a href="https://github.com/0717lq/ai-company-wars-blue">GitHub</a> •
+  <a href="https://pypi.org/project/fclean/">PyPI</a> •
+  <a href="LICENSE">MIT License</a> •
+  <a href="CONTRIBUTING.md">Contribute</a>
+</p>
+
+---
+
+## 中文 / 🇨🇳 中文文档
+
+### 📖 概述
+
+**fclean** 是一个安全、好看的命令行文件整理工具。它能自动扫描你的文件夹，按文件类型分类（图片、文档、视频、音频、压缩包、代码等），然后帮你整理得井井有条。
+
+**设计理念：安全比速度更重要。** fclean 默认只预览不执行，确保你每次操作前都清楚会发生什么。每次操作都可一键回滚。
+
+### ✨ 特性一览
 
 | 特性 | 说明 |
 |------|------|
 | 🛡️ **默认安全** | 先 dry-run 预览，确认无误再加 `--execute` 执行 |
-| ↩️ **可回滚** | 每次操作自动记录，`fclean --undo` 一键恢复到整理前 |
+| ↩️ **一键回滚** | 每次操作自动记录，`fclean --undo` 一键恢复到整理前 |
 | 🎨 **好看** | 基于 rich 的彩色表格输出，不同类别不同颜色 |
 | 🗂️ **智能分类** | 自动识别图片、文档、视频、音频、压缩包、代码、其他（100+ 扩展名） |
-| 📊 **详细统计** | 移动了多少文件、每个类别多少、总大小一目了然 |
-| 🔧 **灵活强大** | 支持排除文件/目录，支持自定义规则扩展 |
+| 📊 **详细统计** | `fclean stats <path>` 查看目录文件统计 |
+| 🔧 **灵活强大** | 支持 `.fcleanrc` 配置文件自定义规则 |
+| ✏️ **批量重命名** | `fclean rename "*.jpg" --pattern "vacation_{n:03d}"` 批量重命名 |
 | ⚡ **零配置** | 安装即用，无需任何配置文件 |
 
-## 🚀 安装
+### 🚀 安装
 
 ```bash
 # 推荐：pip 安装
@@ -81,9 +307,9 @@ pip install -e .
 pip install -e ".[dev]"
 ```
 
-## 💻 使用教程
+### 💻 使用教程
 
-### 快速上手 — 只需 3 步
+#### 快速上手 — 只需 3 步
 
 ```bash
 # 第 1 步：预览整理效果（默认 dry-run，不会碰你的文件）
@@ -96,84 +322,117 @@ fclean ~/Downloads --execute
 fclean --undo
 ```
 
-### 更多用法
+#### 所有命令
+
+| 命令 | 说明 |
+|------|------|
+| `fclean <path>` | 预览整理目录中的文件 |
+| `fclean <path> --execute` | 执行整理 |
+| `fclean init` | 生成 `.fcleanrc` 配置文件 |
+| `fclean init --global` | 生成配置到 `~/.fcleanrc` |
+| `fclean stats <path>` | 目录文件统计 |
+| `fclean config` | 查看当前配置 |
+| `fclean rename "*.jpg" --pattern "vacation_{n:03d}"` | 预览批量重命名 |
+| `fclean rename "*.jpg" --pattern "vacation_{n:03d}" --execute` | 执行批量重命名 |
+| `fclean --undo` | 回滚上一次操作 |
+| `fclean --history` | 查看回滚历史 |
+
+#### 批量重命名
 
 ```bash
-# 查看 undo 历史
-fclean --history
+# 预览（默认 dry-run）
+fclean rename "*.jpg" --pattern "vacation_{n:03d}"
 
-# 排除特定文件类型和目录
-fclean ~/Downloads --exclude "*.tmp" --exclude-dir node_modules
+# 输出：
+# 📋 Rename Preview (dry-run)
+# ┌──────────────────────┬──────────────────────────┐
+# │ 旧文件名              │ 新文件名                  │
+# ├──────────────────────┼──────────────────────────┤
+# │ photo_001.jpg        │ vacation_001.jpg         │
+# │ beach_2024.jpg       │ vacation_002.jpg         │
+# └──────────────────────┴──────────────────────────┘
+# 将重命名 2 个文件
+# 提示: 加 --execute 执行重命名
 
-# 整理当前目录
-fclean
-
-# 查看帮助
-fclean --help
-
-# 查看版本
-fclean --version
+# 执行（同样可回滚）
+fclean rename "*.jpg" --pattern "vacation_{n:03d}" --execute
 ```
 
-### 整理效果
+**模板变量：**
 
-运行后，目录结构会变成这样：
+| 变量 | 说明 | 示例 |
+|------|------|------|
+| `{n}` | 序列号（从 1 开始） | `1`, `2`, `3` |
+| `{n:03d}` | 补零序列号 | `001`, `002`, `003` |
+| `{date}` | 文件修改日期 | `2026-05-19` |
+| `{ext}` | 原扩展名 | `.jpg`, `.png` |
 
+### ⚙️ 配置系统
+
+fclean 通过 `.fcleanrc`（YAML 格式）支持自定义配置。
+
+```bash
+# 在当前目录生成配置文件
+fclean init
+
+# 在用户目录生成全局配置文件
+fclean init --global
 ```
-Downloads/
-├── 图片/          # .jpg, .png, .gif, .svg, .webp ...
-├── 文档/          # .pdf, .docx, .txt, .xlsx ...
-├── 视频/          # .mp4, .avi, .mkv, .mov ...
-├── 音频/          # .mp3, .wav, .flac, .aac ...
-├── 压缩包/        # .zip, .rar, .7z, .tar.gz ...
-├── 代码/          # .py, .js, .html, .css ...
-└── 其他/          # 未识别的文件类型
+
+**配置优先级：** CLI 参数 > `.fcleanrc` 配置 > 默认规则
+
+**配置示例：**
+
+```yaml
+rules:
+  - category: 图片
+    extensions:
+      - .jpg
+      - .jpeg
+      - .png
+      - .gif
+
+  - category: 文档
+    extensions:
+      - .pdf
+      - .docx
+      - .txt
+      - .md
+
+exclude_patterns:
+  - "*.tmp"
+  - "*.log"
+
+exclude_dirs:
+  - node_modules
+  - __pycache__
 ```
 
-## 🧪 开发
+随时查看当前配置：
+
+```bash
+fclean config
+```
+
+### 🧪 开发与贡献
 
 ```bash
 # 安装开发依赖
 pip install -e ".[dev]"
 
-# 运行全部测试（53 个测试全部通过 ✅）
+# 运行全部测试
 pytest tests/ -v
 
 # 运行测试含覆盖率
 pytest tests/ --cov=src/fclean -v
 
-# 贡献指南
-# 欢迎提交 PR！请确保测试通过后再发起
+# 代码检查
+ruff check src/
 ```
 
-## 🤔 为什么选 fclean？
+详见 [CONTRIBUTING.md](CONTRIBUTING.md) 贡献指南。
 
-**市面上的文件整理工具很多，但都有痛点：**
-
-| 特性 | 🧹 **fclean** | `organize-cli` | `FileBot` | 手动整理 |
-|------|:---:|:---:|:---:|:---:|
-| Dry-run 预览 | ✅ **默认开启** | ✅ | ❌ | ❌ |
-| 一键回滚 (undo) | ✅ **独家** | ❌ | ❌ | ❌ |
-| 彩色 rich 输出 | ✅ **独家** | ❌ | ❌ | ❌ |
-| 中文目录名 | ✅ **独家** | ❌ | ❌ | ❌ |
-| 零配置即用 | ✅ **是** | ❌ 需配置 | ❌ | — |
-| 安全第一设计 | ✅ **默认** | ⚠️ 危险 | ❌ | — |
-
-**fclean 的核心设计哲学：安全比速度更重要。** 你永远不会因为误操作而丢失文件。
-
-## 📦 支持的文件类型
-
-| 类别 | 扩展名（部分） |
-|------|---------------|
-| 🖼️ 图片 | `.jpg` `.jpeg` `.png` `.gif` `.svg` `.webp` `.bmp` `.ico` |
-| 📄 文档 | `.pdf` `.docx` `.doc` `.xlsx` `.pptx` `.txt` `.md` `.csv` |
-| 🎬 视频 | `.mp4` `.avi` `.mkv` `.mov` `.wmv` `.flv` `.webm` |
-| 🎵 音频 | `.mp3` `.wav` `.flac` `.aac` `.ogg` `.m4a` |
-| 📦 压缩包 | `.zip` `.rar` `.7z` `.tar` `.gz` `.bz2` `.xz` |
-| 💻 代码 | `.py` `.js` `.ts` `.html` `.css` `.java` `.cpp` `.go` `.rs` |
-| ❓ 其他 | 以上未覆盖的文件类型 |
-
-## 📄 许可
+### 📄 许可
 
 [MIT License](LICENSE) — 欢迎自由使用、修改和分发。
 
@@ -183,5 +442,6 @@ pytest tests/ --cov=src/fclean -v
   <b>fclean</b> — 安全第一，拒绝手滑<br>
   <a href="https://github.com/0717lq/ai-company-wars-blue">GitHub</a> •
   <a href="https://pypi.org/project/fclean/">PyPI</a> •
-  <a href="LICENSE">MIT License</a>
+  <a href="LICENSE">MIT License</a> •
+  <a href="CONTRIBUTING.md">参与贡献</a>
 </p>

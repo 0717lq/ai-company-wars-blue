@@ -29,10 +29,11 @@ from fclean.config import (
     load_config,
 )
 from fclean.organizer import OrganizeResult, compute_stats, organize
+from fclean.renamer import generate_rename_plan
 from fclean.undo import list_undo_logs, record_operation, undo_last
 
 # 所有已知子命令名称
-KNOWN_SUBCOMMANDS = {"init", "stats", "config", "organize"}
+KNOWN_SUBCOMMANDS = {"init", "stats", "config", "organize", "rename"}
 
 
 def _format_size(size_bytes: int) -> str:
@@ -256,6 +257,8 @@ def build_parser():
                "       fclean init                      # 生成配置\n"
                "       fclean stats ~/Downloads         # 统计\n"
                "       fclean config                     # 查看当前配置\n"
+               "       fclean rename \"*.jpg\" --pattern \"vacation_{n:03d}\"  # 预览重命名\n"
+               "       fclean rename \"*.jpg\" --pattern \"vacation_{n:03d}\" --execute  # 执行\n"
                "       fclean --undo                     # 回滚",
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
@@ -330,6 +333,14 @@ def build_parser():
         action="store_true",
         dest="global_config",
         help="将配置文件写入 ~/.fcleanrc 而非当前目录",
+    )
+
+    # rename 子命令的选项
+    parser.add_argument(
+        "--pattern",
+        "-p",
+        default=None,
+        help="命名模板（rename 子命令专用），如 'vacation_{n:03d}'",
     )
 
     return parser
@@ -580,6 +591,154 @@ def _run_config(args):
         print(f"排除目录: {dirs}")
 
 
+def _print_rename_preview(plan, pairs: list[tuple]):
+    """打印 rename dry-run 预览表格。"""
+    try:
+        from rich.console import Console
+        from rich.table import Table
+        from rich.text import Text
+        console = Console()
+    except ImportError:
+        # fallback: 简单输出
+        print(f"\n📋 Rename Preview (dry-run)")
+        print(f"模式: {plan.pattern} → {plan.format_template}")
+        print()
+        if not pairs:
+            print("没有匹配的文件。")
+            return
+        print(f"{'旧文件名':<30} {'新文件名':<30}")
+        print("-" * 60)
+        for old_p, new_p in pairs:
+            print(f"{old_p.name:<30} {new_p.name:<30}")
+        print(f"\n将重命名 {len(pairs)} 个文件")
+        print("提示: 加 --execute 执行重命名")
+        return
+
+    console.print()
+    console.print(Text("📋 Rename Preview (dry-run)", style="bold cyan"))
+    console.print(f"模式: {plan.pattern} → {plan.format_template}")
+    console.print()
+
+    if not pairs:
+        console.print(Text("没有匹配的文件。", style="dim"))
+        return
+
+    table = Table(show_header=True, header_style="bold magenta")
+    table.add_column("旧文件名", style="white")
+    table.add_column("新文件名", style="green")
+    table.add_column("类型", justify="right", style="cyan")
+
+    for old_p, new_p in pairs:
+        table.add_row(old_p.name, new_p.name, old_p.suffix.lower())
+
+    console.print(table)
+    console.print(Text(f"将重命名 {len(pairs)} 个文件", style="yellow"))
+    console.print(Text("提示: 加 --execute 执行重命名", style="dim"))
+    console.print()
+
+
+def _print_rename_result(executed_count: int):
+    """打印 rename 执行结果。"""
+    try:
+        from rich.console import Console
+        from rich.text import Text
+        console = Console()
+    except ImportError:
+        print(f"\n✅ 重命名完成！共处理 {executed_count} 个文件")
+        print("💡 如需回滚: fclean --undo")
+        return
+
+    console.print()
+    console.print(Text("✅ 重命名完成！", style="bold green"))
+    console.print(Text(f"共处理 {executed_count} 个文件", style="cyan"))
+    console.print(Text("💡 如需回滚: fclean --undo", style="dim"))
+    console.print()
+
+
+def _run_rename(args):
+    """执行 fclean rename 子命令。"""
+    # 解析参数
+    glob_pattern = args.arg or args.command
+    if glob_pattern in KNOWN_SUBCOMMANDS or glob_pattern is None:
+        print("❌ 请指定 glob 匹配模式: fclean rename \"*.jpg\" --pattern \"template\"",
+              file=sys.stderr)
+        sys.exit(1)
+
+    format_template = args.pattern
+    if not format_template:
+        print("❌ 请指定命名模板: fclean rename \"*.jpg\" --pattern \"vacation_{n:03d}\"",
+              file=sys.stderr)
+        sys.exit(1)
+
+    # 确定目标目录（command 或 arg 或默认当前目录）
+    target = "."
+    if args.command == "rename" and args.arg and args.arg not in KNOWN_SUBCOMMANDS:
+        # 可能是 fclean rename "*.jpg" --pattern "xxx"（arg 是 glob 模式）
+        pass
+    elif args.command not in KNOWN_SUBCOMMANDS and args.command != "rename":
+        # 多余的位置参数
+        target = args.command
+
+    # 检查目标目录
+    target_dir = Path(target).expanduser().resolve()
+    if not target_dir.exists():
+        print(f"❌ 路径不存在: {target}", file=sys.stderr)
+        sys.exit(1)
+    if not target_dir.is_dir():
+        print(f"❌ 不是目录: {target}", file=sys.stderr)
+        sys.exit(1)
+
+    try:
+        # 生成重命名计划
+        plan = generate_rename_plan(target_dir, glob_pattern, format_template)
+        pairs = plan.get_rename_pairs()
+    except (FileNotFoundError, NotADirectoryError, PermissionError) as e:
+        print(f"❌ 错误: {e}", file=sys.stderr)
+        sys.exit(1)
+
+    if args.execute:
+        # 执行重命名
+        if not pairs:
+            print("没有匹配的文件，无需重命名。")
+            return
+
+        executed = plan.execute()
+        executed_count = len(executed)
+
+        if executed_count > 0:
+            _print_rename_result(executed_count)
+            # 记录 undo 日志（使用 OrganizeResult 兼容格式）
+            from fclean.organizer import FileInfo, OrganizeResult
+            undo_result = OrganizeResult()
+            for item in executed:
+                # 创建 FileInfo 对象（使用旧路径，它可能已被移动但只用于记录）
+                try:
+                    fi = FileInfo(item.old_path)
+                except (FileNotFoundError, OSError):
+                    # 文件已被重命名，直接用 Path 构造
+                    fi = FileInfo.__new__(FileInfo)
+                    fi.path = item.old_path
+                    fi.name = item.old_path.name
+                    fi.size = 0
+                    fi.category_key = None
+                    fi.target_dir_name = "rename"
+                undo_result.files_moved.append((fi, item.new_path))
+            try:
+                log_path = record_operation(undo_result)
+                _ = log_path
+            except ValueError:
+                pass
+        else:
+            print("没有文件被重命名。")
+
+        if executed_count < len(pairs):
+            print(f"⚠️  成功 {executed_count}/{len(pairs)} 个文件，部分文件可能因权限问题跳过。",
+                  file=sys.stderr)
+    else:
+        # dry-run 预览
+        _print_rename_preview(plan, pairs)
+
+
 def main():
     """CLI 主入口。"""
     parser = build_parser()
@@ -618,6 +777,8 @@ def main():
     elif cmd == "organize":
         # 显式 organize 子命令
         _run_organize(args)
+    elif cmd == "rename":
+        _run_rename(args)
     else:
         # 不是已知子命令，当作路径处理 -> organize
         _run_organize(args)

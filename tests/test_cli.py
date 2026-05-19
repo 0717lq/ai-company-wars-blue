@@ -42,7 +42,7 @@ class TestCLIVersion:
         with pytest.raises(SystemExit):
             parser.parse_args(["--version"])
         captured = capsys.readouterr()
-        assert "0.2.0" in captured.out
+        assert "0.3.0" in captured.out
 
 
 class TestCLIHelp:
