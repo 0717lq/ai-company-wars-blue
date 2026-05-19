@@ -37,3 +37,6 @@ Thumbs.db
 
 # Project specific
 *.undo
+
+# Monorepo artifact (created when project is run inside monorepo context)
+/teams/

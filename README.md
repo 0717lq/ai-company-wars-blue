@@ -2,8 +2,9 @@
   <img src="https://img.shields.io/badge/python-3.9+-blue.svg?style=for-the-badge&logo=python&logoColor=white" alt="Python 3.9+">
   <img src="https://img.shields.io/badge/license-MIT-green.svg?style=for-the-badge" alt="MIT License">
   <img src="https://img.shields.io/github/actions/workflow/status/0717lq/ai-company-wars-blue/ci.yml?style=for-the-badge&logo=github" alt="CI">
-  <img src="https://img.shields.io/badge/coverage-%3E80%25-brightgreen?style=for-the-badge" alt="Coverage >80%">
+  <img src="https://img.shields.io/badge/tests-142%20passed-brightgreen?style=for-the-badge&logo=pytest" alt="142 tests passed">
   <img src="https://img.shields.io/badge/PRs-welcome-orange.svg?style=for-the-badge" alt="PRs Welcome">
+  <img src="https://img.shields.io/github/v/release/0717lq/ai-company-wars-blue?style=for-the-badge&logo=github" alt="Latest Release">
 </p>
 
 <h1 align="center">
@@ -27,6 +28,8 @@
 [![CI](https://github.com/0717lq/ai-company-wars-blue/actions/workflows/ci.yml/badge.svg)](https://github.com/0717lq/ai-company-wars-blue/actions/workflows/ci.yml)
 [![Python 3.9+](https://img.shields.io/badge/python-3.9%2B-blue)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
+[![Tests](https://img.shields.io/badge/tests-142%20passed-brightgreen)](https://github.com/0717lq/ai-company-wars-blue/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/0717lq/ai-company-wars-blue)](https://github.com/0717lq/ai-company-wars-blue/releases)
 
 ---
 
@@ -224,15 +227,15 @@ fclean config
 | Dry-run preview | ✅ **Default** | ✅ Default | ✅ | ❌ |
 | One-click undo (organize) | ✅ **Built-in** | ❌ | ❌ | ❌ |
 | One-click undo (rename) | ✅ **Built-in** | ❌ | ❌ | ❌ |
-| Batch rename | ✅ **New in v0.3.0** | ❌ | ❌ | — |
-| Rich color output | ✅ **Exclusive** | ❌ | ❌ | ❌ |
-| Chinese directory names | ✅ **Exclusive** | ❌ | ❌ | ❌ |
-| Config system (`.fcleanrc`) | ✅ **Yes** | ❌ | ✅ | — |
-| Directory stats | ✅ **Yes** | ❌ | ❌ | — |
-| Zero config out of box | ✅ **Yes** | ✅ | ❌ | — |
-| Safety-first design | ✅ **Default dry-run** | ⚠️ Dry-run exists | ⚠️ | ❌ |
-| Number of subcommands | **5 🏆** | 1 | ~8 | — |
-| Test coverage | **>80%** | Good | Moderate | — |
+|| Batch rename | ✅ **Yes** | ❌ | ❌ | — |
+|| Rich color output | ✅ **Exclusive** | ❌ | ❌ | ❌ |
+|| Chinese directory names | ✅ **Exclusive** | ❌ | ❌ | ❌ |
+|| Config system (`.fcleanrc`) | ✅ **Yes** | ❌ | ✅ | — |
+|| Directory stats | ✅ **Yes** | ❌ | ❌ | — |
+|| Zero config out of box | ✅ **Yes** | ✅ | ❌ | — |
+|| Safety-first design | ✅ **Default dry-run** | ⚠️ Dry-run exists | ⚠️ | ❌ |
+|| Number of subcommands | **5 🏆** | 1 | ~8 | — |
+|| Test coverage | **142 tests ✅** | Good | Moderate | — |
 
 ### 🧪 Development
 
