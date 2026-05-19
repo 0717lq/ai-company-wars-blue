@@ -22,6 +22,7 @@ from fclean.organizer import (
     FileInfo,
     organize,
     scan_directory,
+    compute_stats,
 )
 
 
@@ -296,3 +297,109 @@ class TestOrganizeExclude:
 
         result = organize("/test", dry_run=True, exclude=[])
         assert result.total_moved == 2
+
+
+# === Config-driven organize tests ===
+
+
+class TestOrganizeWithConfig:
+    """测试带配置的整理。"""
+
+    def test_organize_with_custom_config(self, fs):
+        """自定义配置的规则应用于整理。"""
+        from fclean.config import Config
+
+        # 创建自定义配置：只识别 .custom 到"自定义"类
+        custom_config = Config({
+            "rules": [
+                {"category": "自定义", "extensions": [".custom"]},
+            ]
+        })
+
+        fs.create_file("/test/file.custom")
+        fs.create_file("/test/photo.jpg")
+
+        result = organize("/test", dry_run=True, config=custom_config)
+
+        # 两个文件都被扫描到
+        assert result.total_scanned == 2
+        # 自定义扩展名应被识别
+        names = [fi.name for fi, _ in result.files_moved]
+        assert "file.custom" in names
+        assert "photo.jpg" in names
+
+    def test_organize_with_config_exclude(self, fs):
+        """配置中的排除模式应在 organize 时生效。"""
+        from fclean.config import Config
+
+        custom_config = Config({
+            "rules": [{"category": "图片", "extensions": [".jpg", ".png"]}],
+            "exclude_patterns": ["*.tmp"],
+        })
+
+        fs.create_file("/test/file.txt")
+        fs.create_file("/test/temp.tmp")
+
+        result = organize("/test", dry_run=True, config=custom_config)
+        names = [fi.name for fi, _ in result.files_moved]
+        assert "file.txt" in names
+        assert "temp.tmp" not in names
+
+
+class TestComputeStats:
+    """测试 compute_stats 函数。"""
+
+    def test_stats_empty_dir(self, fs):
+        """空目录统计结果应为0。"""
+        fs.create_dir("/empty")
+        stats = compute_stats("/empty")
+        assert stats["total_files"] == 0
+        assert stats["total_size"] == 0
+
+    def test_stats_with_files(self, fs):
+        """有文件时统计正确。"""
+        fs.create_file("/test/photo.jpg", contents="data")
+        fs.create_file("/test/doc.pdf", contents="document")
+        fs.create_file("/test/song.mp3", contents="audio")
+
+        stats = compute_stats("/test")
+        assert stats["total_files"] == 3
+
+    def test_stats_categories(self, fs):
+        """统计结果按类别分组正确。"""
+        fs.create_file("/test/a.jpg", contents="a")
+        fs.create_file("/test/b.pdf", contents="b")
+        fs.create_file("/test/c.mp3", contents="c")
+
+        stats = compute_stats("/test")
+        cats = stats["categories"]
+        assert len(cats) > 0
+
+    def test_stats_nonexistent(self, fs):
+        """不存在的目录应报错。"""
+        with pytest.raises(FileNotFoundError):
+            compute_stats("/nonexistent")
+
+    def test_stats_file_not_dir(self, fs):
+        """文件路径应报错。"""
+        fs.create_file("/test/file.txt")
+        with pytest.raises(NotADirectoryError):
+            compute_stats("/test/file.txt")
+
+    def test_stats_with_config(self, fs):
+        """使用配置的 compute_stats 应正确识别自定义类别。"""
+        from fclean.config import Config
+
+        custom_config = Config({
+            "rules": [
+                {"category": "自定义", "extensions": [".custom"]},
+            ]
+        })
+
+        fs.create_file("/test/file.custom", contents="data")
+        fs.create_file("/test/photo.jpg", contents="img")
+
+        stats = compute_stats("/test", config=custom_config)
+        cats = stats["categories"]
+        assert "自定义" in cats
+        assert stats["total_files"] == 2

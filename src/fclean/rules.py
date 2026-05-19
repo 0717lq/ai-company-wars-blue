@@ -3,6 +3,7 @@ fclean 分类规则模块。
 
 定义文件扩展名到类别文件夹的映射关系。
 支持有序匹配（优先匹配更具体的规则）。
+同时支持 Config 对象驱动规则（优先级更高）。
 
 用法:
     from fclean.rules import classify, get_category_name
@@ -12,6 +13,8 @@ fclean 分类规则模块。
 """
 
 from typing import Optional
+
+from fclean.config import Config
 
 # 类别定义（有序——先匹配的优先）
 # key 是内部别名，value 包含目录名、扩展名列表
@@ -81,17 +84,30 @@ for cat in CATEGORIES:
         EXTENSION_TO_CATEGORY[ext.lower()] = cat
 
 
-def classify(filename: str) -> Optional[str]:
+def classify(filename: str, config: Optional[Config] = None) -> Optional[str]:
     """
     根据文件名返回类别 key。
+    如果提供了 Config 对象，优先使用配置中的规则。
 
     参数:
         filename: 文件名（含扩展名）
+        config: 可选的自定义配置对象
 
     返回:
-        类别 key（如 "image", "document"），如果不是已知类型则返回 None
+        类别 key（如 "image"），如果不是已知类型则返回 None
     """
-    # 提取扩展名（最后一个 . 后面的部分）
+    # 如果有自定义配置，优先用配置中的规则
+    if config is not None:
+        cat_name = config.classify(filename)
+        if cat_name is not None:
+            # 将中文类别名映射回内部 key
+            for cat in CATEGORIES:
+                if cat["dir_name"] == cat_name:
+                    return cat["key"]
+            # 对于自定义配置中的新类别，直接返回目录名
+            return cat_name
+
+    # 使用默认规则
     idx = filename.rfind(".")
     if idx == -1:
         return None
@@ -100,22 +116,53 @@ def classify(filename: str) -> Optional[str]:
     return cat["key"] if cat else None
 
 
-def get_dir_name(category_key: str) -> str:
+def get_dir_name(category_key: str, config: Optional[Config] = None) -> str:
     """
     根据类别 key 返回中文目录名。
+    如果提供了 Config，也检查配置中的类别（用于自定义规则）。
 
     参数:
         category_key: 类别 key（如 "image"）
+        config: 可选的自定义配置对象
 
     返回:
         中文目录名（如 "图片"）
     """
+    # 先检查默认类别
     for cat in CATEGORIES:
         if cat["key"] == category_key:
             return cat["dir_name"]
+
+    # 如果是自定义配置中的类别名，直接作为目录名返回
+    if config is not None and category_key in config.rules:
+        return category_key
+
     return "其他"
 
 
-def get_all_categories() -> list[dict]:
-    """返回所有类别定义的副本。"""
-    return list(CATEGORIES)
+def get_all_categories(config: Optional[Config] = None) -> list[dict]:
+    """
+    返回所有类别定义的副本。
+    如果提供了 Config，合并自定义分类到结果中。
+
+    参数:
+        config: 可选的自定义配置对象
+
+    返回:
+        类别定义列表
+    """
+    cats = list(CATEGORIES)
+
+    # 合并自定义配置中的类别
+    if config is not None:
+        existing_dirs = {c["dir_name"] for c in cats}
+        for cat_name, exts in config.rules.items():
+            if cat_name not in existing_dirs:
+                cats.append({
+                    "key": cat_name,
+                    "dir_name": cat_name,
+                    "extensions": exts,
+                })
+                existing_dirs.add(cat_name)
+
+    return cats

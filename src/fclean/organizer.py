@@ -3,7 +3,7 @@ fclean 核心整理模块。
 
 负责：
 1. 扫描目录，收集文件信息
-2. 按规则分类文件
+2. 按规则分类文件（支持从配置文件加载自定义规则）
 3. 执行文件移动操作（或 dry-run 预览）
 4. 统计整理结果
 
@@ -13,24 +13,38 @@ fclean 核心整理模块。
     result = organize("/path/to/folder", dry_run=True)
     result = organize("/path/to/folder", execute=True)
 """
-
-import os
 import shutil
 from pathlib import Path
 from typing import Optional
 
+from fclean.config import Config
 from fclean.rules import classify, get_dir_name
 
 
 class FileInfo:
     """单个文件的信息。"""
 
-    def __init__(self, path: Path):
+    def __init__(self, path: Path, config: Optional[Config] = None):
         self.path = path
         self.name = path.name
         self.size = path.stat().st_size
-        self.category_key = classify(path.name)
-        self.target_dir_name = get_dir_name(self.category_key) if self.category_key else "其他"
+        self.category_key = classify(path.name, config)
+        # 如果使用自定义配置，用配置中的中文名
+        if config is not None:
+            # 查找配置中是否有该类别
+            for cat_name, exts in config.rules.items():
+                ext = path.suffix.lower()
+                if ext in exts:
+                    self.target_dir_name = cat_name
+                    break
+            else:
+                self.target_dir_name = (
+                    get_dir_name(self.category_key, config) if self.category_key else "其他"
+                )
+        else:
+            self.target_dir_name = (
+                get_dir_name(self.category_key) if self.category_key else "其他"
+            )
 
     @property
     def is_known(self) -> bool:
@@ -139,6 +153,7 @@ def scan_directory(
     target_dir: Path,
     exclude_patterns: Optional[list[str]] = None,
     exclude_dirs: Optional[list[str]] = None,
+    config: Optional[Config] = None,
 ) -> list[FileInfo]:
     """
     扫描目录，返回所有文件（不递归到子目录，只处理一级文件）。
@@ -147,6 +162,7 @@ def scan_directory(
         target_dir: 要扫描的目录路径
         exclude_patterns: 排除的文件模式列表
         exclude_dirs: 排除的目录名列表
+        config: 自定义配置（用于分类）
 
     返回:
         FileInfo 列表
@@ -168,7 +184,7 @@ def scan_directory(
             if entry.is_file():
                 if _should_exclude(entry.name, False, exclude_patterns, exclude_dirs):
                     continue
-                files.append(FileInfo(entry))
+                files.append(FileInfo(entry, config))
             elif entry.is_dir():
                 if _should_exclude(entry.name, True, exclude_patterns, exclude_dirs):
                     continue
@@ -227,16 +243,18 @@ def organize(
     execute: bool = False,
     exclude: Optional[list[str]] = None,
     exclude_dirs: Optional[list[str]] = None,
+    config: Optional[Config] = None,
 ) -> OrganizeResult:
     """
     整理指定目录的文件。
 
     流程：
-    1. 扫描目录获取文件列表
-    2. 按扩展名分类到各类别
-    3. 如果是 dry-run，只返回结果不移动
-    4. 如果是 execute，实际移动文件
-    5. 返回 OrganizeResult，包含详细统计
+    1. 加载配置（如果提供了 config 参数）
+    2. 扫描目录获取文件列表
+    3. 按扩展名分类到各类别
+    4. 如果是 dry-run，只返回结果不移动
+    5. 如果是 execute，实际移动文件
+    6. 返回 OrganizeResult，包含详细统计
 
     参数:
         target_path: 要整理的目录路径
@@ -244,6 +262,7 @@ def organize(
         execute: 是否实际执行（为 True 时忽略 dry_run）
         exclude: 排除的文件模式
         exclude_dirs: 排除的目录名
+        config: 自定义配置对象（用于分类）
 
     返回:
         OrganizeResult 对象
@@ -251,8 +270,16 @@ def organize(
     target = Path(target_path).expanduser().resolve()
     result = OrganizeResult()
 
+    # 从配置中获取排除列表（如果 CLI 没有指定，使用配置中的值）
+    effective_exclude = exclude if exclude else (
+        config.exclude_patterns if config and config.exclude_patterns else None
+    )
+    effective_exclude_dirs = exclude_dirs if exclude_dirs else (
+        config.exclude_dirs if config and config.exclude_dirs else None
+    )
+
     # 扫描文件
-    files = scan_directory(target, exclude, exclude_dirs)
+    files = scan_directory(target, effective_exclude, effective_exclude_dirs, config)
     result.files_scanned = files
 
     if execute or not dry_run:
@@ -277,3 +304,52 @@ def organize(
                 result.files_moved.append((fi, dst_dir / fi.name))
 
     return result
+
+
+def compute_stats(
+    target_path: str,
+    config: Optional[Config] = None,
+) -> dict:
+    """
+    计算指定目录的文件统计信息。
+
+    参数:
+        target_path: 目标目录路径
+        config: 自定义配置（用于分类）
+
+    返回:
+        统计信息字典，包含:
+        - total_files: 总文件数
+        - total_size: 总大小（字节）
+        - categories: {类别名: {"count": N, "size": N}} 按类分组
+    """
+    target = Path(target_path).expanduser().resolve()
+
+    if not target.exists():
+        raise FileNotFoundError(f"目录不存在: {target_path}")
+    if not target.is_dir():
+        raise NotADirectoryError(f"不是目录: {target_path}")
+
+    # 构建类别统计
+    categories: dict[str, dict] = {}
+    total_files = 0
+    total_size = 0
+
+    for entry in target.iterdir():
+        if entry.name.startswith("."):
+            continue
+        if entry.is_file():
+            fi = FileInfo(entry, config)
+            cat = fi.target_dir_name
+            if cat not in categories:
+                categories[cat] = {"count": 0, "size": 0}
+            categories[cat]["count"] += 1
+            categories[cat]["size"] += fi.size
+            total_files += 1
+            total_size += fi.size
+
+    return {
+        "total_files": total_files,
+        "total_size": total_size,
+        "categories": categories,
+    }

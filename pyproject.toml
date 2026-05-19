@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "fclean"
-version = "0.1.0"
-description = "A safe, colorful CLI tool to organize messy folders by file type — dry-run preview, undo rollback, rich output"
+version = "0.2.0"
+description = "A safe, colorful CLI tool to organize messy folders by file type — dry-run preview, undo rollback, rich output, configurable rules"
 readme = "README.md"
 requires-python = ">=3.9"
 license = {text = "MIT"}
@@ -41,12 +41,15 @@ classifiers = [
 ]
 dependencies = [
     "rich>=13.0.0",
+    "PyYAML>=6.0",
 ]
 
 [project.optional-dependencies]
 dev = [
     "pytest>=7.0",
     "pyfakefs>=5.0",
+    "pytest-cov>=5.0",
+    "ruff>=0.5.0",
 ]
 
 [project.urls]
@@ -62,3 +65,24 @@ where = ["src"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 python_files = ["test_*.py"]
+
+[tool.ruff]
+target-version = "py39"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "W"]
+
+[tool.coverage.run]
+source = ["src"]
+omit = ["*/tests/*", "*/__main__.py"]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "if __name__ == .__main__.:",
+    "except ImportError:",
+    "raise NotImplementedError",
+    "if has_rich:",
+    "if not has_rich:",
+]

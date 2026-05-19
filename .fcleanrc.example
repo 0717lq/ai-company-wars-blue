@@ -1,0 +1,6 @@
+# fclean 示例配置文件
+#
+# 将此文件复制为 .fcleanrc 并编辑以自定义规则。
+# 运行 `fclean init` 自动生成此文件。
+#
+# 配置优先级: CLI 参数 > .fcleanrc > 默认规则

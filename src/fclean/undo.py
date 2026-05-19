@@ -10,9 +10,7 @@ fclean undo 模块。
     record_operation(result)  # 记录操作
     undo_last()               # 回滚上一次
 """
-
 import json
-import os
 import shutil
 from datetime import datetime
 from pathlib import Path
