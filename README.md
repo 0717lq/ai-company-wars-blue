@@ -52,6 +52,8 @@
 | 📊 **Directory stats** | `fclean stats <path>` — file counts, sizes, categories |
 | 🔧 **Customizable** | `.fcleanrc` config file for custom rules and exclusions |
 | ✏️ **Batch rename** | `fclean rename "*.jpg" --pattern "vacation_{n:03d}"` |
+| 🗂️ **Duplicate detection** | `fclean dupes` — SHA-256 hash, safe delete, undo |
+| 🤖 **AI Agent native** | `--json` output on every command, Agent Skill file |
 | ⚡ **Zero config** | Works out of the box, no setup needed |
 
 ### 🚀 Installation
@@ -96,8 +98,12 @@ fclean --undo
 | `fclean config` | Display current configuration |
 | `fclean rename "*.jpg" --pattern "vacation_{n:03d}"` | Preview batch rename |
 | `fclean rename "*.jpg" --pattern "vacation_{n:03d}" --execute` | Execute batch rename |
+| `fclean dupes <path>` | Find duplicate files (SHA-256) |
+| `fclean dupes <path> --delete` | Delete duplicate files safely |
+| `fclean --json <path>` | JSON output for AI Agent |
 | `fclean --undo` | Rollback last operation |
 | `fclean --history` | View undo history |
+| `fclean --install-completion` | Install shell completion (bash/zsh/fish) |
 
 #### Batch Rename
 
@@ -128,6 +134,83 @@ fclean rename "*.jpg" --pattern "vacation_{n:03d}" --execute
 | `{n:03d}` | Zero-padded number | `001`, `002`, `003` |
 | `{date}` | File modification date | `2026-05-19` |
 | `{ext}` | Original extension | `.jpg`, `.png` |
+
+### 🤖 AI Agent Integration
+
+fclean is designed from the ground up for **AI Agent native usage**. Every command supports `--json` / `-j` output that returns structured, machine-parseable JSON.
+
+```bash
+# AI Agent: preview organize as JSON
+fclean --json ~/Downloads
+
+# AI Agent: directory stats as JSON
+fclean stats --json ~/Downloads
+
+# AI Agent: check duplicates as JSON
+fclean dupes --json ~/Downloads
+
+# AI Agent: preview rename as JSON
+fclean rename "*.jpg" --pattern "vacation_{n:03d}" --json
+
+# AI Agent: undo result as JSON
+fclean --json --undo
+```
+
+**JSON Schema — All outputs include:**
+- `tool`: always `"fclean"`
+- `command`: subcommand name (`organize`, `stats`, `rename`, `dupes`, `undo`, `history`)
+- `timestamp`: ISO 8601 UTC timestamp
+- Plus command-specific structured data
+
+**Example:**
+```bash
+fclean --json ~/Downloads | jq '.summary'
+# "42 files scanned, 38 files organized into 3 categories"
+```
+
+**Use with AI Agents:**
+- [Hermes Agent](https://hermes-agent.nousresearch.com): Skill file at `.hermes/skills/fclean.md`
+- Claude Code / Cursor Agent: Use `fclean --json <path>` for structured output
+- Pipe to `jq` for filtering: `fclean dupes --json ~/Downloads | jq '.groups'`
+
+**Shell Completion:**
+```bash
+fclean --install-completion
+# Auto-detects bash/zsh/fish and installs completion scripts
+```
+
+### 🗂️ Duplicate Detection
+
+```bash
+# Scan for duplicates (dry-run, safe)
+fclean dupes ~/Downloads
+
+# Skip small files
+fclean dupes ~/Downloads --min-size 1MB
+
+# Example output:
+# 🗂️  重复文件检测结果
+# 扫描了 142 个文件，发现 3 组重复，共 4 个冗余文件
+# 可节省空间: 256.0MB
+
+# Delete duplicates (keep newest by default)
+fclean dupes ~/Downloads --delete
+
+# Keep oldest instead
+fclean dupes ~/Downloads --delete --strategy oldest
+
+# Undo is supported: fclean --undo
+
+# JSON output for AI Agent
+fclean dupes --json ~/Downloads
+```
+
+**How it works:**
+1. Scans directory, groups files by size (different sizes can't be duplicates)
+2. SHA-256 hashes same-size files in parallel (max 4 workers)
+3. Groups files with identical hashes as duplicates
+4. Default dry-run — preview before deleting
+5. `--delete` safely removes duplicates, records undo history
 
 #### Example
 
@@ -227,9 +310,13 @@ fclean config
 | Dry-run preview | ✅ **Default** | ✅ Default | ✅ | ❌ |
 | One-click undo (organize) | ✅ **Built-in** | ❌ | ❌ | ❌ |
 | One-click undo (rename) | ✅ **Built-in** | ❌ | ❌ | ❌ |
-|| Batch rename | ✅ **Yes** | ❌ | ❌ | — |
-|| Rich color output | ✅ **Exclusive** | ❌ | ❌ | ❌ |
-|| Chinese directory names | ✅ **Exclusive** | ❌ | ❌ | ❌ |
+| Batch rename | ✅ **Yes** | ❌ | ❌ | — |
+| Duplicate detection | ✅ **SHA-256** | ❌ | ❌ | — |
+| AI Agent native (`--json`) | ✅ **Yes** | ❌ | ❌ | ❌ |
+| Shell completion ($SHELL) | ✅ **Yes** | ❌ | ❌ | ❌ |
+| Agent Skill file | ✅ **Hermes/Claude** | ❌ | ❌ | ❌ |
+| Rich color output | ✅ **Exclusive** | ❌ | ❌ | ❌ |
+| Chinese directory names | ✅ **Exclusive** | ❌ | ❌ | ❌ |
 || Config system (`.fcleanrc`) | ✅ **Yes** | ❌ | ✅ | — |
 || Directory stats | ✅ **Yes** | ❌ | ❌ | — |
 || Zero config out of box | ✅ **Yes** | ✅ | ❌ | — |
@@ -337,8 +424,12 @@ fclean --undo
 | `fclean config` | 查看当前配置 |
 | `fclean rename "*.jpg" --pattern "vacation_{n:03d}"` | 预览批量重命名 |
 | `fclean rename "*.jpg" --pattern "vacation_{n:03d}" --execute` | 执行批量重命名 |
+| `fclean dupes <path>` | 检测重复文件（SHA-256） |
+| `fclean dupes <path> --delete` | 安全删除重复文件 |
+| `fclean --json <path>` | JSON 输出（AI Agent 友好） |
 | `fclean --undo` | 回滚上一次操作 |
 | `fclean --history` | 查看回滚历史 |
+| `fclean --install-completion` | 安装 shell 自动补全 |
 
 #### 批量重命名
 

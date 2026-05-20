@@ -1,5 +1,52 @@
 # Changelog
 
+## [v0.4.0] — 2026-05-20 — AI Agent Era
+
+### 🆕 新功能 / New Features
+
+#### 🤖 AI Agent First (P0) — 所有命令支持 `--json` 输出
+- **`fclean --json <path>`**: organize dry-run/execute 输出结构化 JSON
+- **`fclean stats --json <path>`**: 目录统计 JSON 输出（含分类详情）
+- **`fclean rename --json`**: 批量重命名 JSON 输出
+- **`fclean dupes --json`**: 重复文件检测 JSON 输出
+- **`fclean --json --undo`**: undo 回滚 JSON 输出
+- **`fclean --json --history`**: undo 历史 JSON 输出
+- 标准化 JSON schema: 所有输出含 `tool`, `command`, `timestamp` 元数据字段
+- AI Agent 可直接解析决策，无需解析彩色表格
+
+#### 🗂️ fclean dupes (P0) — 重复文件检测与清理
+- **SHA-256 逐块哈希**：避免大文件一次性加载到内存
+- **Size 预过滤**：不同大小的文件不哈希，显著提升性能
+- **多线程并行**：`concurrent.futures.ThreadPoolExecutor` 最大 4 workers
+- **Rich 进度条**：`rich.progress` 显示扫描和哈希进度
+- **`--min-size`**：跳过小文件，如 `--min-size 1MB`
+- **`--delete`**：安全删除重复文件，默认保留最新版本
+- **`--strategy newest|oldest|path`**：自定义保留策略
+- **Undo 集成**：删除操作自动记录到 undo 日志，可回滚
+- **交互确认模式**：逐组确认删除（待实现）
+
+#### 📦 Market Polish (P1)
+- **Shell 自动补全**：`fclean --install-completion` 支持 bash/zsh/fish
+- **Agent Skill**：`.hermes/skills/fclean.md` — AI Agent 可直接调用 fclean
+- **GitHub Topics**：添加 `fclean`, `file-organizer`, `cli`, `python`, `file-management`, `productivity`, `duplicate-files`, `batch-rename`, `dry-run`
+- **README 新增章节**：AI Agent Integration（JSON 用法、jq 示例、Hermes Agent 集成）
+
+### 🧪 测试强化 / Test Improvements
+- **新增 test_dupes.py**: 25+ 个重复文件检测测试用例
+  - SHA-256 哈希正确性测试（文本、二进制、大文件、空文件）
+  - 重复检测核心逻辑（无重复、单组、多组、三个副本）
+  - 边界情况（空目录、隐藏文件、不同大小、空文件）
+  - --min-size 参数测试
+  - 删除操作测试（newest/oldest 策略）
+  - JSON/dict 输出测试
+
+### ⚙️ 工程化 / Engineering
+- 版本号更新至 v0.4.0
+- 新增 `src/fclean/dupes.py` 模块（~500 行）
+- `cli.py` 重构：增加 JSON 输出函数、dupes 子命令、completion 安装
+
+---
+
 ## [v0.3.0] — 2026-05-19 — Market-Ready
 
 ### 🆕 新功能 / New Features

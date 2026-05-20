@@ -63,6 +63,7 @@ class OrganizeResult:
         self.files_moved: list[tuple[FileInfo, Path]] = []  # (FileInfo, 目标路径)
         self.files_skipped: list[tuple[Path, str]] = [] # (路径, 跳过原因)
         self.errors: list[tuple[str, str]] = []     # (文件路径, 错误信息)
+        self.scan_path: str = ""                    # 被扫描的目录路径（用于 JSON 输出）
 
     @property
     def total_scanned(self) -> int:
