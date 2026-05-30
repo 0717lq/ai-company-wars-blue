@@ -13,16 +13,15 @@
 """
 
 import os
-import stat
 from pathlib import Path
 
 import pytest
 
 from fclean.organizer import (
     FileInfo,
+    compute_stats,
     organize,
     scan_directory,
-    compute_stats,
 )
 
 

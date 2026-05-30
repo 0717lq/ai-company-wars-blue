@@ -135,9 +135,9 @@ class DupesResult:
         """用 rich 表格打印重复文件结果。"""
         try:
             from rich.console import Console
+            from rich.panel import Panel
             from rich.table import Table
             from rich.text import Text
-            from rich.panel import Panel
             console = Console()
             has_rich = True
         except ImportError:
@@ -211,7 +211,7 @@ class DupesResult:
             ))
             console.print()
         else:
-            print(f"\n🗂️  重复文件检测结果")
+            print("\n🗂️  重复文件检测结果")
             print(f"扫描了 {self.total_scanned} 个文件，发现 {self.total_duplicate_groups} 组重复")
             if self.total_size_wasted > 0:
                 print(f"可节省空间: {_format_size(self.total_size_wasted)}")
@@ -221,7 +221,8 @@ class DupesResult:
                 self.duplicate_groups.items(),
                 key=lambda x: -x[1][0].stat().st_size if x[1][0].exists() else 0,
             ):
-                print(f"  SHA-256: {hash_val[:16]}... ({_format_size(paths[0].stat().st_size)}, {len(paths)} files)")
+                size_str = _format_size(paths[0].stat().st_size)
+                print(f"  SHA-256: {hash_val[:16]}... ({size_str}, {len(paths)} files)")
                 for p in sorted(paths, key=lambda x: str(x)):
                     print(f"    {p}")
                 print()
@@ -232,7 +233,7 @@ class DupesResult:
         """生成删除计划：对每组重复，决定保留哪个文件，删除哪些文件。
 
         参数:
-            strategy: 保留策略 — "newest" (默认, 保留最新的), "oldest" (保留最旧的), "path" (保留路径最先的)
+            strategy: 保留策略 — "newest"(默认, 保留最新), "oldest"(保留最旧), "path"(保留路径最前)
 
         返回:
             {hash: [(保留路径, 要删除路径), ...]} 由于每组只保留一个，
@@ -412,7 +413,7 @@ def find_duplicates(
     if files_to_hash and show_progress:
         try:
             from rich.console import Console
-            from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn, TaskID
+            from rich.progress import BarColumn, Progress, SpinnerColumn, TextColumn
 
             console = Console()
             with Progress(

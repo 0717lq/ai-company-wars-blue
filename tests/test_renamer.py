@@ -13,7 +13,7 @@ from pathlib import Path
 
 import pytest
 
-from fclean.renamer import generate_rename_plan, RenamePlan, _resolve_template
+from fclean.renamer import _resolve_template, generate_rename_plan
 
 
 class TestTemplateResolution:

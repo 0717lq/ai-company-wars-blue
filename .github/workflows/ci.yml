@@ -29,8 +29,7 @@ jobs:
 
       - name: Lint with ruff
         run: |
-          pip install ruff
-          ruff check src/
+          ruff check src/ tests/
 
       - name: Test with pytest and coverage
         run: |
@@ -42,3 +41,23 @@ jobs:
         with:
           name: coverage-report-${{ matrix.python-version }}
           path: htmlcov/
+
+  docker:
+    name: Docker build test
+    runs-on: ubuntu-latest
+    needs: test
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build Docker image
+        run: docker build -t fclean:test .
+
+      - name: Verify Docker image
+        run: docker run --rm fclean:test --help
+
+      - name: Test JSON output via Docker
+        run: |
+          mkdir -p /tmp/fclean-test
+          touch /tmp/fclean-test/{a.txt,b.jpg,c.log}
+          docker run --rm -v /tmp/fclean-test:/data fclean:test --json /data

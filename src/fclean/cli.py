@@ -36,13 +36,14 @@ from fclean.config import (
     generate_example_config,
     load_config,
 )
-from fclean.dupes import DupesResult, find_duplicates
+from fclean.dupes import find_duplicates
+from fclean.ignore import load_ignore_rules
 from fclean.organizer import OrganizeResult, compute_stats, organize
 from fclean.renamer import generate_rename_plan
 from fclean.undo import list_undo_logs, record_operation, undo_last
 
 # 所有已知子命令名称
-KNOWN_SUBCOMMANDS = {"init", "stats", "config", "organize", "rename", "dupes"}
+KNOWN_SUBCOMMANDS = {"init", "stats", "config", "organize", "rename", "dupes", "watch"}
 
 # 删除策略选项
 DELETE_STRATEGIES = ["newest", "oldest", "path"]
@@ -361,7 +362,7 @@ def _print_rename_preview(plan, pairs: list[tuple], json_output: bool = False):
         from rich.text import Text
         console = Console()
     except ImportError:
-        print(f"\n📋 Rename Preview (dry-run)")
+        print("\n📋 Rename Preview (dry-run)")
         print(f"模式: {plan.pattern} → {plan.format_template}")
         print()
         if not pairs:
@@ -622,6 +623,14 @@ def build_parser():
         help="不显示进度条（dupes 子命令专用）",
     )
 
+    # watch 子命令的选项
+    parser.add_argument(
+        "--auto",
+        action="store_true",
+        default=False,
+        help="自动执行整理（watch 子命令专用，默认 dry-run）",
+    )
+
     return parser
 
 
@@ -703,7 +712,7 @@ def _install_completion():
         )
 
         bashrc = Path.home() / ".bashrc"
-        source_line = f"source ~/.fclean_completion.bash"
+        source_line = "source ~/.fclean_completion.bash"
         bashrc_content = ""
         if bashrc.exists():
             bashrc_content = bashrc.read_text(encoding="utf-8")
@@ -724,8 +733,8 @@ def _install_completion():
             f"# fclean v{__version__} shell completion for fish\n"
             "complete -c fclean -f\n"
             "complete -c fclean -n '__fish_use_subcommand' -a 'init' -d 'Generate config file'\n"
-            "complete -c fclean -n '__fish_use_subcommand' -a 'stats' -d 'Show directory statistics'\n"
-            "complete -c fclean -n '__fish_use_subcommand' -a 'config' -d 'View current configuration'\n"
+            "complete -c fclean -n '__fish_use_subcommand' -a 'stats' -d 'Dir stats'\n"
+            "complete -c fclean -n '__fish_use_subcommand' -a 'config' -d 'View config'\n"
             "complete -c fclean -n '__fish_use_subcommand' -a 'organize' -d 'Organize files'\n"
             "complete -c fclean -n '__fish_use_subcommand' -a 'rename' -d 'Batch rename files'\n"
             "complete -c fclean -n '__fish_use_subcommand' -a 'dupes' -d 'Find duplicate files'\n"
@@ -771,12 +780,19 @@ def _run_organize(args, config: Optional[Config] = None):
     if config is None:
         config = load_config(target_path)
 
+    # 加载 .fcleanignore 规则，合并到 exclude 列表
+    ignore = load_ignore_rules(target_path)
+    extra_exclude = list(ignore._patterns) if ignore.has_rules else None
+    effective_exclude = (args.exclude or []) + (extra_exclude or [])
+    if not effective_exclude:
+        effective_exclude = None
+
     try:
         result = organize(
             target_path=target_path,
             dry_run=(not args.execute),
             execute=args.execute,
-            exclude=args.exclude or None,
+            exclude=effective_exclude,
             exclude_dirs=args.exclude_dirs or None,
             config=config,
         )
@@ -1138,7 +1154,7 @@ def _run_dupes(args):
                     undo_result.files_moved.append((fi, keep))
                 try:
                     log_path = record_operation(undo_result)
-                    print(f"💡 如需回滚: fclean --undo")
+                    print("💡 如需回滚: fclean --undo")
                     _ = log_path
                 except ValueError:
                     pass
@@ -1157,6 +1173,35 @@ def _run_dupes(args):
 
     if result.errors:
         sys.exit(1)
+
+
+def _run_watch(args):
+    """执行 fclean watch 子命令。"""
+    from fclean.watcher import watch_directory
+
+    target = args.arg or "."
+    if target in KNOWN_SUBCOMMANDS:
+        target = "."
+
+    target_path = str(Path(target).expanduser().resolve())
+
+    if not Path(target_path).exists():
+        print(f"❌ 路径不存在: {target}", file=sys.stderr)
+        sys.exit(1)
+    if not Path(target_path).is_dir():
+        print(f"❌ 不是目录: {target}", file=sys.stderr)
+        sys.exit(1)
+
+    config = load_config(target_path)
+    ignore = load_ignore_rules(target_path)
+
+    watch_directory(
+        target_path=target_path,
+        auto_execute=args.auto,
+        config=config,
+        ignore_rules=ignore,
+        json_output=args.json,
+    )
 
 
 def main():

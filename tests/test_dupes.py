@@ -21,8 +21,8 @@ import pytest
 from fclean.dupes import (
     DupesResult,
     _format_size,
-    _parse_size_arg,
     _hash_file,
+    _parse_size_arg,
     find_duplicates,
 )
 

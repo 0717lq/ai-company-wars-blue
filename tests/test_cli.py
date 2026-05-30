@@ -8,12 +8,10 @@
 4. 错误处理
 """
 
-import sys
-from pathlib import Path
 
 import pytest
 
-from fclean.cli import main, build_parser
+from fclean.cli import build_parser
 
 
 class TestCLIVersion:
@@ -42,7 +40,7 @@ class TestCLIVersion:
         with pytest.raises(SystemExit):
             parser.parse_args(["--version"])
         captured = capsys.readouterr()
-        assert "0.4.0" in captured.out
+        assert "0.5.0" in captured.out
 
 
 class TestCLIHelp:

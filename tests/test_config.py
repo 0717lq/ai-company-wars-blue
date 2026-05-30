@@ -9,14 +9,11 @@
 5. 错误配置处理
 """
 
-from pathlib import Path
 
-import pytest
 
 from fclean.config import (
-    Config,
     DEFAULT_CONFIG,
-    find_config_file,
+    Config,
     generate_example_config,
     load_config,
 )

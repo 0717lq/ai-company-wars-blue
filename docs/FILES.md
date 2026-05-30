@@ -1,34 +1,34 @@
-# 文件功能说明
+# fclean v0.5.0 — 文件功能说明
 
-## src/fclean/ — 源代码
+## `src/fclean/__init__.py`
+包初始化文件，定义 `__version__ = "0.5.0"`。
 
-| 文件 | 功能 |
-|------|------|
-| `__init__.py` | 包初始化，版本号 `0.3.0` |
-| `__main__.py` | `python -m fclean` 入口 |
-| `cli.py` | 命令行入口，argparse 解析参数，支持子命令：init, stats, config, organize, rename |
-| `config.py` | `.fcleanrc` YAML 配置系统，支持自动检测、加载、合并默认配置 |
-| `organizer.py` | 文件整理核心，扫描目录、分类、安全移动、统计 |
-| `renamer.py` | 批量重命名模块，glob 匹配 + 模板变量解析 + 防冲突 |
-| `rules.py` | 文件分类规则定义，7 大类 100+ 扩展名映射 |
-| `undo.py` | 回滚系统，记录操作日志到 `~/.fclean/undo/` |
+## `src/fclean/__main__.py`
+允许 `python -m fclean` 运行。
 
-## tests/ — 测试用例
+## `src/fclean/cli.py`
+CLI 主入口（argparse 架构）。注册所有子命令：organize、stats、config、rename、dupes、watch、init、undo、history。所有命令支持 `--json` 输出。支持 shell 补全安装（bash/zsh/fish）。
 
-| 文件 | 功能 | 用例数 |
-|------|------|--------|
-| `test_cli.py` | CLI 参数解析测试 | 19 |
-| `test_config.py` | 配置加载、合并、分类测试 | 14 |
-| `test_edge_cases.py` | 空目录/权限/Unicode/冲突等边界测试 | 18 |
-| `test_organizer.py` | 整理功能测试（dry-run, execute, 排除模式） | 21 |
-| `test_renamer.py` | 重命名功能测试（模板、执行、冲突） | 18 |
-| `test_rules.py` | 分类规则测试（扩展名匹配、大小写） | 19 |
-| `test_undo.py` | 回滚日志记录、执行、列出测试 | 8 |
+## `src/fclean/config.py`
+.fcleanrc YAML 配置系统。Config 数据类、load_config() 加载函数、DEFAULT_CONFIG 默认值。支持自定义分类规则和排除模式。优先级：CLI 参数 > .fcleanrc > 默认。
 
-## docs/ — 文档
+## `src/fclean/dupes.py`
+重复文件检测。SHA-256 逐块哈希、size 预过滤、多线程并行（ThreadPoolExecutor）。支持 --min-size、--delete、--strategy newest|oldest|path。Undo 集成。
 
-| 文件 | 说明 |
-|------|------|
-| `STRUCTURE.md` | 项目目录结构 |
-| `FILES.md` | 各文件功能说明 |
-| `CODE.md` | 核心类和函数说明 |
+## `src/fclean/ignore.py`
+.fleanignore 解析器。IgnoreRules 类支持 glob 模式（*、**、?）、! 取反、目录模式（/ 结尾）、路径模式（含 /）。load_ignore_rules() 加载函数。
+
+## `src/fclean/organizer.py`
+文件整理核心逻辑。organize() 函数扫描目录、按规则分类移动文件。OrganizeResult 数据类记录结果。dry-run/execute 双模式。自动重名处理。
+
+## `src/fclean/renamer.py`
+批量重命名。RenamePlan 类、generate_rename_plan() 函数。模板变量：{n}（序列号）、{n:03d}（补零）、{date}（日期）、{ext}（扩展名）。冲突自动处理。Undo 集成。
+
+## `src/fclean/rules.py`
+文件分类规则。classify() 根据扩展名分类、get_dir_name() 获取目标目录名。7 大类 100+ 扩展名。支持配置驱动自定义规则。
+
+## `src/fclean/undo.py`
+操作回滚系统。UndoManager 管理 JSON 日志。record_operation() 记录、undo_last() 回滚、list_undo_logs() 列出历史。
+
+## `src/fclean/watcher.py`
+文件监控模块（watchdog）。watch_directory() 启动监听。FcleanHandler 处理 FileCreatedEvent。防抖机制（默认 2 秒）。.fcleanignore 集成。--auto 模式自动执行。

@@ -1,66 +1,57 @@
-# 核心代码说明
+# fclean v0.5.0 — 核心代码概览
 
-## cli.py
+## cli.py — CLI 主入口
+- `build_parser()` — argparse 解析器，注册所有子命令
+- `main()` — 入口函数
+- `_run_organize()` — organize 子命令逻辑
+- `_run_stats()` — stats 子命令逻辑
+- `_run_rename()` — rename 子命令逻辑
+- `_run_dupes()` — dupes 子命令逻辑
+- `_run_watch()` — watch 子命令逻辑
+- JSON 输出：所有子命令支持 `--json` 参数
 
-| 函数 | 说明 |
-|------|------|
-| `build_parser()` | 构建 argparse 参数解析器，支持 5 个子命令 |
-| `main()` | CLI 主入口，分派到各子命令处理函数 |
-| `_run_organize(args)` | 执行文件整理（dry-run 或 execute） |
-| `_run_init(args)` | 生成 .fcleanrc 配置文件 |
-| `_run_stats(args)` | 目录文件统计（rich 表格 + 条形图） |
-| `_run_config(args)` | 查看当前加载的配置 |
-| `_run_rename(args)` | 批量重命名（dry-run 预览或 execute 执行） |
-| `_print_dry_run(result)` | rich 彩色 dry-run 预览表格 |
-| `_print_execute_result(result)` | 执行结果统计（按类别分组） |
-| `_print_rename_preview(plan, pairs)` | 重命名预览（新旧文件名对照表） |
-| `_print_rename_result(count)` | 重命名执行结果 |
-| `_format_size(bytes)` | 将字节格式化为人类可读 |
+## config.py — 配置系统
+- `Config` — 配置数据类
+- `load_config()` — 加载 .fcleanrc 配置
+- `DEFAULT_CONFIG` — 默认配置字典
 
-## config.py
+## dupes.py — 重复文件检测
+- `find_duplicates()` — 核心查找函数（size 预过滤 → SHA-256 哈希）
+- `DupesResult` — 检测结果数据类
+- `delete_duplicates()` — 安全删除（支持 newest/oldest/path 策略）
+- 多线程并行哈希（ThreadPoolExecutor, max 4 workers）
 
-| 类/函数 | 说明 |
-|---------|------|
-| `Config` | 配置对象，封装 rules/exclude_patterns/exclude_dirs |
-| `Config.classify(filename)` | 根据配置规则返回类别名 |
-| `load_config(path)` | 自动检测并加载配置（优先级：CLI > 文件 > 默认） |
-| `find_config_file(start_dir)` | 搜索 .fcleanrc（当前目录 → home） |
-| `generate_example_config()` | 生成示例配置文件内容 |
+## ignore.py — .fcleanignore 解析器
+- `IgnoreRules` — 规则集合类（正向匹配 + ! 取反）
+- `load_ignore_rules()` — 加载 .fcleanignore 文件
+- 支持 glob、目录模式、路径模式
+- `filter_files()` — 过滤文件列表
 
-## organizer.py
+## organizer.py — 文件整理
+- `organize()` — 核心整理函数
+- `OrganizeResult` — 整理结果数据类
+- dry-run/execute 双模式，自动重名处理
 
-| 类/函数 | 说明 |
-|---------|------|
-| `FileInfo` | 文件信息，含分类结果和目标目录名 |
-| `OrganizeResult` | 整理结果容器（files_moved, errors 等） |
-| `scan_directory(target, exclude, config)` | 扫描目录（一级文件，排除隐藏和排除模式） |
-| `organize(target_path, dry_run, execute)` | 核心整理函数 |
-| `compute_stats(target_path, config)` | 按类别统计文件数量和大小 |
-| `_safe_move(fi, dst_dir, result)` | 安全移动，自动处理重名冲突 |
+## renamer.py — 批量重命名
+- `RenamePlan` — 重命名计划类
+- `generate_rename_plan()` — 生成重命名方案
+- 模板变量：{n}, {n:03d}, {date}, {ext}
+- 冲突自动处理（数字后缀）
 
-## renamer.py (新增 v0.3.0)
+## rules.py — 文件分类规则
+- `classify()` — 根据扩展名分类
+- `get_dir_name()` — 获取目标目录名
+- 7 大类 100+ 扩展名
 
-| 类/函数 | 说明 |
-|---------|------|
-| `RenameItem` | 单个重命名项（旧路径 → 新路径） |
-| `RenamePlan` | 重命名计划（匹配列表 + 执行 + undo 兼容） |
-| `generate_rename_plan(directory, glob, template)` | 生成重命名计划 |
-| `_resolve_template(template, index, file_path)` | 解析模板变量 `{n}`, `{date}`, `{ext}` |
-| `_ensure_unique_path(target_dir, name)` | 确保目标路径唯一（冲突 + 数字后缀） |
-| `_match_glob_pattern(directory, pattern)` | 使用 Path.glob 匹配文件 |
+## undo.py — 操作回滚
+- `UndoManager` — 回滚管理器
+- `record_operation()` — 记录操作到 JSON 日志
+- `undo_last()` — 回滚最近操作
+- `list_undo_logs()` — 列出所有历史操作
 
-## rules.py
-
-| 函数 | 说明 |
-|------|------|
-| `classify(filename, config)` | 根据扩展名返回类别 key |
-| `get_dir_name(category_key, config)` | 类别 key → 中文目录名 |
-| `get_all_categories(config)` | 返回完整类别列表（含自定义） |
-
-## undo.py
-
-| 函数 | 说明 |
-|------|------|
-| `record_operation(result)` | 记录操作到 ~/.fclean/undo/ |
-| `undo_last()` | 回滚最近一次操作 |
-| `list_undo_logs()` | 列出所有可用回滚记录 |
+## watcher.py — 文件监控
+- `watch_directory()` — 启动文件监控
+- watchdog Observer + FcleanHandler（继承 FileSystemEventHandler）
+- 防抖机制（默认 2 秒 debounce）
+- .fcleanignore 集成
+- --auto 模式自动执行（默认 dry-run）

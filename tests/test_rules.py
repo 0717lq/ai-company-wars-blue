@@ -9,7 +9,7 @@
 5. 各分类目录名正确
 """
 
-from fclean.rules import classify, get_dir_name, get_all_categories
+from fclean.rules import classify, get_all_categories, get_dir_name
 
 
 class TestClassify:

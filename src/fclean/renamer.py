@@ -18,7 +18,6 @@ fclean 批量重命名模块。
 import re
 from datetime import datetime
 from pathlib import Path
-from typing import Optional
 
 
 class RenameItem:

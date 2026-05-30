@@ -4,13 +4,9 @@
 使用 pyfakefs 模拟各种文件系统和权限场景。
 """
 
-import os
-import stat
 from pathlib import Path
 
-import pytest
-
-from fclean.organizer import organize, scan_directory, FileInfo
+from fclean.organizer import organize
 from fclean.renamer import generate_rename_plan
 
 

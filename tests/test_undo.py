@@ -7,17 +7,16 @@
 import json
 import os
 import shutil
-import time
 from pathlib import Path
 
 import pytest
 
-from fclean.organizer import OrganizeResult, FileInfo
+from fclean.organizer import FileInfo, OrganizeResult
 from fclean.undo import (
+    UNDO_DIR,
+    list_undo_logs,
     record_operation,
     undo_last,
-    list_undo_logs,
-    UNDO_DIR,
 )
 
 

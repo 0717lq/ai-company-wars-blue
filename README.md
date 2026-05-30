@@ -2,7 +2,7 @@
   <img src="https://img.shields.io/badge/python-3.9+-blue.svg?style=for-the-badge&logo=python&logoColor=white" alt="Python 3.9+">
   <img src="https://img.shields.io/badge/license-MIT-green.svg?style=for-the-badge" alt="MIT License">
   <img src="https://img.shields.io/github/actions/workflow/status/0717lq/ai-company-wars-blue/ci.yml?style=for-the-badge&logo=github" alt="CI">
-  <img src="https://img.shields.io/badge/tests-142%20passed-brightgreen?style=for-the-badge&logo=pytest" alt="142 tests passed">
+  <img src="https://img.shields.io/badge/tests-210%20passed-brightgreen?style=for-the-badge&logo=pytest" alt="210 tests passed">
   <img src="https://img.shields.io/badge/PRs-welcome-orange.svg?style=for-the-badge" alt="PRs Welcome">
   <img src="https://img.shields.io/github/v/release/0717lq/ai-company-wars-blue?style=for-the-badge&logo=github" alt="Latest Release">
 </p>
@@ -28,7 +28,7 @@
 [![CI](https://github.com/0717lq/ai-company-wars-blue/actions/workflows/ci.yml/badge.svg)](https://github.com/0717lq/ai-company-wars-blue/actions/workflows/ci.yml)
 [![Python 3.9+](https://img.shields.io/badge/python-3.9%2B-blue)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
-[![Tests](https://img.shields.io/badge/tests-142%20passed-brightgreen)](https://github.com/0717lq/ai-company-wars-blue/actions/workflows/ci.yml)
+[![Tests](https://img.shields.io/badge/tests-210%20passed-brightgreen)](https://github.com/0717lq/ai-company-wars-blue/actions/workflows/ci.yml)
 [![Release](https://img.shields.io/github/v/release/0717lq/ai-company-wars-blue)](https://github.com/0717lq/ai-company-wars-blue/releases)
 
 ---
@@ -61,6 +61,15 @@
 ```bash
 # Recommended: pip install
 pip install fclean
+
+# With watch support (optional)
+pip install fclean[watch]
+
+# Docker
+docker pull 0717lq/ai-company-wars-blue:latest
+# Or build locally:
+docker build -t fclean .
+docker run --rm -v ~/Downloads:/data fclean /data
 
 # Or from source
 git clone https://github.com/0717lq/ai-company-wars-blue.git
@@ -322,7 +331,77 @@ fclean config
 || Zero config out of box | ✅ **Yes** | ✅ | ❌ | — |
 || Safety-first design | ✅ **Default dry-run** | ⚠️ Dry-run exists | ⚠️ | ❌ |
 || Number of subcommands | **5 🏆** | 1 | ~8 | — |
-|| Test coverage | **142 tests ✅** | Good | Moderate | — |
+||| Test coverage | **210 tests ✅** | Good | Moderate | — |
+
+### 🐳 Docker
+
+```bash
+# Build image
+docker build -t fclean .
+
+# Organize a directory (dry-run by default)
+docker run --rm -v ~/Downloads:/data fclean /data
+
+# Execute for real
+docker run --rm -v ~/Downloads:/data fclean /data --execute
+
+# JSON output for automation
+docker run --rm -v ~/Downloads:/data fclean --json /data
+```
+
+### 🪝 Pre-commit Hook
+
+Add to `.pre-commit-config.yaml`:
+
+```yaml
+repos:
+  - repo: https://github.com/0717lq/ai-company-wars-blue
+    rev: v0.5.0
+    hooks:
+      - id: fclean-organize
+        # Add --execute to actually move files (default: dry-run)
+        # args: [--execute]
+```
+
+### 🚫 .fcleanignore
+
+Create a `.fcleanignore` file in your target directory (like `.gitignore`):
+
+```
+# Ignore all log files
+*.log
+
+# Ignore specific directory
+node_modules/
+
+# Except important logs
+!important.log
+```
+
+Supported patterns: `*`, `**`, `?`, `!` (negation), directory suffix `/`.
+
+### 👀 Watch (Auto-Organize)
+
+Monitor a directory and auto-organize new files:
+
+```bash
+# Install watch support
+pip install fclean[watch]
+
+# Watch mode (dry-run by default)
+fclean watch ~/Downloads
+
+# Auto-execute mode
+fclean watch ~/Downloads --auto
+
+# JSON output
+fclean watch --json ~/Downloads
+```
+
+Features:
+- Debounce mechanism (2s default) — waits for file writes to complete
+- Respects `.fcleanignore` rules
+- Ctrl+C to stop gracefully
 
 ### 🧪 Development
 
@@ -380,6 +459,9 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed contribution guidelines.
 | 📊 **详细统计** | `fclean stats <path>` 查看目录文件统计 |
 | 🔧 **灵活强大** | 支持 `.fcleanrc` 配置文件自定义规则 |
 | ✏️ **批量重命名** | `fclean rename "*.jpg" --pattern "vacation_{n:03d}"` 批量重命名 |
+| 🗂️ **重复检测** | `fclean dupes <path>` SHA-256 哈希检测，安全删除，一键回滚 |
+| 🤖 **AI Agent 原生** | 全命令 `--json` 输出，结构化数据，Agent Skill 文件 |
+| ⌨️ **Shell 补全** | `fclean --install-completion` 支持 bash/zsh/fish |
 | ⚡ **零配置** | 安装即用，无需任何配置文件 |
 
 ### 🚀 安装
@@ -387,6 +469,13 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed contribution guidelines.
 ```bash
 # 推荐：pip 安装
 pip install fclean
+
+# 含 watch 支持（可选）
+pip install fclean[watch]
+
+# Docker
+docker build -t fclean .
+docker run --rm -v ~/Downloads:/data fclean /data
 
 # 或从源码安装
 git clone https://github.com/0717lq/ai-company-wars-blue.git
@@ -461,6 +550,83 @@ fclean rename "*.jpg" --pattern "vacation_{n:03d}" --execute
 | `{date}` | 文件修改日期 | `2026-05-19` |
 | `{ext}` | 原扩展名 | `.jpg`, `.png` |
 
+### 🗂️ 重复文件检测
+
+```bash
+# 扫描重复文件（dry-run，安全模式）
+fclean dupes ~/Downloads
+
+# 跳过小文件
+fclean dupes ~/Downloads --min-size 1MB
+
+# 示例输出：
+# 🗂️  重复文件检测结果
+# 扫描了 142 个文件，发现 3 组重复，共 4 个冗余文件
+# 可节省空间: 256.0MB
+
+# 删除重复文件（默认保留最新版本）
+fclean dupes ~/Downloads --delete
+
+# 自定义保留策略
+fclean dupes ~/Downloads --delete --strategy oldest
+
+# 支持回滚：fclean --undo
+
+# JSON 输出（AI Agent 友好）
+fclean dupes --json ~/Downloads
+```
+
+**工作原理：**
+1. 扫描目录，按文件大小分组（不同大小不可能是重复文件）
+2. 对相同大小的文件并行计算 SHA-256 哈希（最多 4 workers）
+3. 相同哈希的文件判定为重复
+4. 默认 dry-run — 预览后再删除
+5. `--delete` 安全删除冗余文件，自动记录 undo 历史
+
+### 🤖 AI Agent 集成
+
+fclean 专为 **AI Agent 原生调用**而设计。每条命令都支持 `--json` / `-j` 参数，返回结构化 JSON。
+
+```bash
+# AI Agent：预览整理结果（JSON）
+fclean --json ~/Downloads
+
+# AI Agent：目录统计（JSON）
+fclean stats --json ~/Downloads
+
+# AI Agent：重复检测（JSON）
+fclean dupes --json ~/Downloads
+
+# AI Agent：批量重命名预览（JSON）
+fclean rename "*.jpg" --pattern "vacation_{n:03d}" --json
+
+# AI Agent：回滚结果（JSON）
+fclean --json --undo
+```
+
+**JSON Schema — 所有输出包含：**
+- `tool`: 固定为 `"fclean"`
+- `command`: 子命令名称（`organize`, `stats`, `rename`, `dupes`, `undo`, `history`）
+- `timestamp`: ISO 8601 UTC 时间戳
+- 以及命令特有的结构化数据
+
+**示例：**
+```bash
+fclean --json ~/Downloads | jq '.summary'
+# "42 files scanned, 38 files organized into 3 categories"
+```
+
+**AI Agent 对接：**
+- [Hermes Agent](https://hermes-agent.nousresearch.com)：Skill 文件位于 `.hermes/skills/fclean.md`
+- Claude Code / Cursor Agent：使用 `fclean --json <path>` 获取结构化输出
+- 管道配合 `jq` 过滤：`fclean dupes --json ~/Downloads | jq '.groups'`
+
+**Shell 自动补全：**
+```bash
+fclean --install-completion
+# 自动检测 bash/zsh/fish 并安装补全脚本
+```
+
 ### ⚙️ 配置系统
 
 fclean 通过 `.fcleanrc`（YAML 格式）支持自定义配置。
@@ -507,6 +673,76 @@ exclude_dirs:
 ```bash
 fclean config
 ```
+
+### 🐳 Docker
+
+```bash
+# 构建镜像
+docker build -t fclean .
+
+# 整理目录（默认 dry-run 预览）
+docker run --rm -v ~/Downloads:/data fclean /data
+
+# 实际执行
+docker run --rm -v ~/Downloads:/data fclean /data --execute
+
+# JSON 输出（供自动化脚本）
+docker run --rm -v ~/Downloads:/data fclean --json /data
+```
+
+### 🪝 Pre-commit Hook
+
+在 `.pre-commit-config.yaml` 中添加：
+
+```yaml
+repos:
+  - repo: https://github.com/0717lq/ai-company-wars-blue
+    rev: v0.5.0
+    hooks:
+      - id: fclean-organize
+        # 加 --execute 才实际移动文件（默认 dry-run）
+        # args: [--execute]
+```
+
+### 🚫 .fcleanignore 忽略规则
+
+在目标目录创建 `.fcleanignore` 文件（类似 `.gitignore`）：
+
+```
+# 忽略所有日志文件
+*.log
+
+# 忽略特定目录
+node_modules/
+
+# 但保留重要日志
+!important.log
+```
+
+支持的模式：`*`、`**`、`?`、`!`（取反）、`/` 结尾（目录模式）。
+
+### 👀 Watch 自动监控
+
+监控目录，新文件自动触发整理：
+
+```bash
+# 安装 watch 支持
+pip install fclean[watch]
+
+# watch 模式（默认 dry-run）
+fclean watch ~/Downloads
+
+# 自动执行模式
+fclean watch ~/Downloads --auto
+
+# JSON 输出
+fclean watch --json ~/Downloads
+```
+
+功能特点：
+- 防抖机制（默认 2 秒）— 等文件写入完成再触发
+- 自动读取 `.fcleanignore` 规则
+- Ctrl+C 优雅退出
 
 ### 🧪 开发与贡献
 

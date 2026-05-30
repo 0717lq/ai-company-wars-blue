@@ -1,5 +1,45 @@
 # Changelog
 
+## [v0.5.0] — 2026-05-30 — Production Pipeline & Developer Integration
+
+### 🆕 新功能 / New Features
+
+#### 📦 PyPI 发布 (P0)
+- **`pip install fclean`**：GitHub Actions + Trusted Publisher (OIDC) 自动发布
+- tag push 触发 (`v*`)，无需手动操作
+
+#### 🐳 Docker 容器化 (P0)
+- `Dockerfile`：基于 `python:3.12-slim`，ENTRYPOINT 设为 fclean
+- `docker run --rm -v ~/Downloads:/data fclean /data` 一行命令整理
+- `.dockerignore` 排除测试/文档等非必要文件
+
+#### 🪝 Pre-commit Hook 集成 (P0)
+- `.pre-commit-hooks.yaml`：定义 `fclean-organize` hook
+- 默认 dry-run（安全），用户加 `args: [--execute]` 才实际执行
+
+#### 🚫 .fcleanignore 忽略规则 (P1)
+- 类似 `.gitignore` 的忽略规则系统
+- 支持 glob 模式（`*`, `**`, `?`）和 `!` 取反
+- 目录模式（`/` 结尾）和路径模式（含 `/`）
+- organize 和 watch 命令自动读取 `.fcleanignore`
+
+#### 👀 fclean watch 文件监控 (P1)
+- 基于 watchdog 监听目录变化，新文件自动触发 organize
+- 防抖机制（默认 2 秒），避免文件写入中误触发
+- `--auto` 模式自动执行（默认 dry-run 预览）
+- 可选依赖：`pip install fclean[watch]`
+
+### ⚙️ 工程化 / Engineering
+- 版本号更新至 v0.5.0
+- `watchdog>=3.0` 作为可选依赖（extras: `watch`）
+- pyproject.toml 新增 keywords: `file-watcher`, `ignore-rules`
+
+### 🧪 测试强化 / Test Improvements
+- **新增 test_ignore.py**: .fcleanignore 解析器测试（glob、取反、目录模式）
+- **新增 test_watcher.py**: watch 命令测试（事件处理、防抖、忽略规则集成）
+
+---
+
 ## [v0.4.0] — 2026-05-20 — AI Agent Era
 
 ### 🆕 新功能 / New Features
