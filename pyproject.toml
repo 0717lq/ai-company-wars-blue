@@ -28,6 +28,11 @@ keywords = [
     "batch-rename",
     "file-watcher",
     "ignore-rules",
+    "ascii-chart",
+    "stats-visualization",
+    "docker",
+    "pre-commit",
+    "production-ready",
 ]
 classifiers = [
     "Programming Language :: Python :: 3",

@@ -2,7 +2,7 @@
   <img src="https://img.shields.io/badge/python-3.9+-blue.svg?style=for-the-badge&logo=python&logoColor=white" alt="Python 3.9+">
   <img src="https://img.shields.io/badge/license-MIT-green.svg?style=for-the-badge" alt="MIT License">
   <img src="https://img.shields.io/github/actions/workflow/status/0717lq/ai-company-wars-blue/ci.yml?style=for-the-badge&logo=github" alt="CI">
-  <img src="https://img.shields.io/badge/tests-210%20passed-brightgreen?style=for-the-badge&logo=pytest" alt="210 tests passed">
+  <img src="https://img.shields.io/badge/tests-238%20passed-brightgreen?style=for-the-badge&logo=pytest" alt="238 tests passed">
   <img src="https://img.shields.io/badge/PRs-welcome-orange.svg?style=for-the-badge" alt="PRs Welcome">
   <img src="https://img.shields.io/github/v/release/0717lq/ai-company-wars-blue?style=for-the-badge&logo=github" alt="Latest Release">
 </p>
@@ -28,8 +28,24 @@
 [![CI](https://github.com/0717lq/ai-company-wars-blue/actions/workflows/ci.yml/badge.svg)](https://github.com/0717lq/ai-company-wars-blue/actions/workflows/ci.yml)
 [![Python 3.9+](https://img.shields.io/badge/python-3.9%2B-blue)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
-[![Tests](https://img.shields.io/badge/tests-210%20passed-brightgreen)](https://github.com/0717lq/ai-company-wars-blue/actions/workflows/ci.yml)
+[![Tests](https://img.shields.io/badge/tests-238%20passed-brightgreen)](https://github.com/0717lq/ai-company-wars-blue/actions/workflows/ci.yml)
 [![Release](https://img.shields.io/github/v/release/0717lq/ai-company-wars-blue)](https://github.com/0717lq/ai-company-wars-blue/releases)
+
+---
+
+## 🎉 What's New
+
+### v0.5.0 — "Production Pipeline" 🚀 *(2026-05-31)*
+
+> From local tool to production-ready — PyPI, Docker, Pre-commit, and beautiful stats charts.
+
+| New Feature | Description | How to Use |
+|-------------|-------------|------------|
+| 📊 **Stats Visualization** | ASCII pie chart + bar chart for file distribution | `fclean stats --chart ~/Downloads` |
+| 📦 **Docker Support** | Official container image, one-line pull & run | `docker run --rm -v ~/Downloads:/data fclean /data` |
+| 🪝 **Pre-commit Hook** | Auto-organize files before every commit | Add to `.pre-commit-config.yaml` |
+| 👀 **Watch Mode** | Monitor directory, auto-classify new files | `pip install fclean[watch] && fclean watch ~/Downloads` |
+| 🚫 **.fcleanignore** | Gitignore-style rules to skip files | Create `.fcleanignore` in target directory |
 
 ---
 
@@ -328,12 +344,15 @@ fclean config
 | Agent Skill file | ✅ **Hermes/Claude** | ❌ | ❌ | ❌ |
 | Rich color output | ✅ **Exclusive** | ❌ | ❌ | ❌ |
 | Chinese directory names | ✅ **Exclusive** | ❌ | ❌ | ❌ |
-|| Config system (`.fcleanrc`) | ✅ **Yes** | ❌ | ✅ | — |
-|| Directory stats | ✅ **Yes** | ❌ | ❌ | — |
-|| Zero config out of box | ✅ **Yes** | ✅ | ❌ | — |
-|| Safety-first design | ✅ **Default dry-run** | ⚠️ Dry-run exists | ⚠️ | ❌ |
-|| Number of subcommands | **5 🏆** | 1 | ~8 | — |
-||| Test coverage | **210 tests ✅** | Good | Moderate | — |
+| Config system (`.fcleanrc`) | ✅ **Yes** | ❌ | ✅ | — |
+| Directory stats | ✅ **Yes** | ❌ | ❌ | — |
+| Stats visualization (charts) | ✅ **ASCII pie+bar** | ❌ | ❌ | — |
+| Zero config out of box | ✅ **Yes** | ✅ | ❌ | — |
+| Safety-first design | ✅ **Default dry-run** | ⚠️ Dry-run exists | ⚠️ | ❌ |
+| Number of subcommands | **6 🏆** | 1 | ~8 | — |
+| Test coverage | **238 tests ✅** | Good | Moderate | — |
+| Docker support | ✅ **Yes** | ✅ | ❌ | — |
+| Pre-commit hook | ✅ **Yes** | ✅ | ❌ | — |
 
 ### 🐳 Docker
 
