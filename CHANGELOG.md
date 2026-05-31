@@ -29,14 +29,25 @@
 - `--auto` 模式自动执行（默认 dry-run 预览）
 - 可选依赖：`pip install fclean[watch]`
 
+#### 📊 stats 可视化增强 (P1)
+- **`fclean stats --chart <path>`**: ASCII 饼图/柱状图，可视化文件类型分布
+  - 按数量分布：水平条形图 + 百分比
+  - 按大小分布：空间占用条形图 + 百分比
+- **`fclean stats --top N <path>`**: 大文件 Top-N 排行
+  - 按大小降序排列，显示文件名 + 大小 + 条形图
+  - 递归扫描子目录
+
 ### ⚙️ 工程化 / Engineering
 - 版本号更新至 v0.5.0
 - `watchdog>=3.0` 作为可选依赖（extras: `watch`）
 - pyproject.toml 新增 keywords: `file-watcher`, `ignore-rules`
 
 ### 🧪 测试强化 / Test Improvements
-- **新增 test_ignore.py**: .fcleanignore 解析器测试（glob、取反、目录模式）
-- **新增 test_watcher.py**: watch 命令测试（事件处理、防抖、忽略规则集成）
+- **新增 test_ignore.py**: .fcleanignore 解析器测试（glob、取反、目录模式）— 25 个测试
+- **新增 test_watcher.py**: watch 命令测试（事件处理、防抖、忽略规则集成）— 9 个测试
+- **新增 test_stats_viz.py**: 可视化模块测试（饼图、柱状图、Top-N、边界条件）— 23 个测试
+- **test_cli.py 新增**: --chart/--top 参数解析测试 — 7 个测试
+- 总测试数：238 个（较 v0.4.0 的 176 个增加 62 个）
 
 ---
 

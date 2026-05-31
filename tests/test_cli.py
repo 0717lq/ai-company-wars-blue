@@ -179,3 +179,56 @@ class TestCLIInitGlobal:
         parser = build_parser()
         args = parser.parse_args(["init", "--global"])
         assert args.global_config is True
+
+
+class TestCLIStatsChart:
+    """测试 stats --chart 参数。"""
+
+    def test_chart_flag(self):
+        """fclean stats --chart 应设置 chart=True。"""
+        parser = build_parser()
+        args = parser.parse_args(["stats", "/path", "--chart"])
+        assert args.chart is True
+
+    def test_chart_default_false(self):
+        """默认 chart 应为 False。"""
+        parser = build_parser()
+        args = parser.parse_args(["stats", "/path"])
+        assert args.chart is False
+
+    def test_chart_with_json(self):
+        """--chart 和 --json 可以同时传入（JSON 模式忽略 --chart）。"""
+        parser = build_parser()
+        args = parser.parse_args(["stats", "/path", "--chart", "--json"])
+        assert args.chart is True
+        assert args.json is True
+
+
+class TestCLIStatsTopN:
+    """测试 stats --top N 参数。"""
+
+    def test_top_flag(self):
+        """fclean stats --top 10 应设置 top=10。"""
+        parser = build_parser()
+        args = parser.parse_args(["stats", "/path", "--top", "10"])
+        assert args.top == 10
+
+    def test_top_default_none(self):
+        """默认 top 应为 None。"""
+        parser = build_parser()
+        args = parser.parse_args(["stats", "/path"])
+        assert args.top is None
+
+    def test_top_with_chart(self):
+        """--top 和 --chart 可以同时使用。"""
+        parser = build_parser()
+        args = parser.parse_args(["stats", "/path", "--top", "5", "--chart"])
+        assert args.top == 5
+        assert args.chart is True
+
+    def test_top_with_json(self):
+        """--top 和 --json 可以同时使用。"""
+        parser = build_parser()
+        args = parser.parse_args(["stats", "/path", "--top", "3", "--json"])
+        assert args.top == 3
+        assert args.json is True

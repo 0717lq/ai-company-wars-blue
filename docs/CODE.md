@@ -1,57 +1,148 @@
-# fclean v0.5.0 — 核心代码概览
+# fclean v0.5.0 — 核心代码文档
 
-## cli.py — CLI 主入口
-- `build_parser()` — argparse 解析器，注册所有子命令
-- `main()` — 入口函数
-- `_run_organize()` — organize 子命令逻辑
-- `_run_stats()` — stats 子命令逻辑
-- `_run_rename()` — rename 子命令逻辑
-- `_run_dupes()` — dupes 子命令逻辑
-- `_run_watch()` — watch 子命令逻辑
-- JSON 输出：所有子命令支持 `--json` 参数
+## cli.py — CLI 命令行入口
+
+### 核心函数
+
+| 函数 | 功能 |
+|------|------|
+| `build_parser()` | 构建 argparse 解析器，定义所有子命令和选项 |
+| `main()` | CLI 主入口，路由到子命令处理函数 |
+| `_run_organize(args)` | 处理 organize 子命令（默认 dry-run） |
+| `_run_stats(args)` | 处理 stats 子命令，支持 --chart/--top/--json |
+| `_run_init(args)` | 处理 init 子命令，生成 .fcleanrc |
+| `_run_config(args)` | 处理 config 子命令，显示当前配置 |
+| `_run_rename(args)` | 处理 rename 子命令，批量重命名 |
+| `_run_dupes(args)` | 处理 dupes 子命令，重复文件检测 |
+| `_run_watch(args)` | 处理 watch 子命令，文件监控 |
+| `_install_completion()` | 安装 shell 自动补全（bash/zsh/fish） |
+
+### JSON 输出函数
+
+| 函数 | 输出 |
+|------|------|
+| `_make_json_envelope(cmd, data)` | 统一 JSON 包装（tool + timestamp） |
+| `_organize_to_json(result)` | organize 结果 JSON |
+| `_stats_to_json(stats, path, top_files)` | stats 结果 JSON（含 top files） |
+| `_rename_to_json(plan, pairs)` | rename 结果 JSON |
+| `_undo_to_json(result)` | undo 结果 JSON |
+| `_history_to_json(logs)` | history 结果 JSON |
+
+### 参数一览
+
+| 参数 | 类型 | 说明 |
+|------|------|------|
+| `command` | str? | 子命令名或路径 |
+| `arg` | str? | 子命令的参数 |
+| `--json/-j` | flag | JSON 输出 |
+| `--execute` | flag | 执行（默认 dry-run） |
+| `--undo` | flag | 回滚 |
+| `--history` | flag | 查看历史 |
+| `--chart` | flag | stats ASCII 图表 |
+| `--top N` | int? | stats Top-N 大文件 |
+| `--pattern/-p` | str? | rename 模板 |
+| `--delete` | flag | dupes 删除 |
+| `--min-size` | str? | dupes 最小文件大小 |
+| `--auto` | flag | watch 自动执行 |
+
+---
+
+## stats_viz.py — 统计可视化
+
+### 核心函数
+
+| 函数 | 功能 |
+|------|------|
+| `render_pie_chart(stats, width=40)` | 渲染 ASCII 饼图（双维度：数量+大小） |
+| `render_bar_chart(stats, width=40)` | 渲染 ASCII 垂直柱状图 |
+| `find_top_files(target_path, n=10)` | 查找 Top-N 大文件（递归扫描） |
+| `render_top_files(files, width=60)` | 渲染大文件排行列表 |
+
+### 数据结构
+
+```python
+# find_top_files 返回值
+[
+    {
+        "path": "/absolute/path/to/file.bin",
+        "name": "file.bin",
+        "size": 102400,           # 字节
+        "size_human": "100.0KB",  # 人类可读
+    },
+    ...
+]
+```
+
+---
+
+## organizer.py — 核心整理逻辑
+
+### 核心类
+
+| 类 | 功能 |
+|------|------|
+| `FileInfo` | 文件信息（path, name, size, category_key, target_dir_name） |
+| `OrganizeResult` | 整理结果（files_moved, files_skipped, errors） |
+
+### 核心函数
+
+| 函数 | 功能 |
+|------|------|
+| `organize(target_path, ...)` | 执行文件整理（dry-run 或 execute） |
+| `compute_stats(target_path, config)` | 计算目录统计信息 |
+
+---
 
 ## config.py — 配置系统
-- `Config` — 配置数据类
-- `load_config()` — 加载 .fcleanrc 配置
-- `DEFAULT_CONFIG` — 默认配置字典
+
+| 函数 | 功能 |
+|------|------|
+| `load_config(target=None)` | 加载并合并配置（本地 > 全局 > 默认） |
+| `generate_example_config()` | 生成示例 .fcleanrc 内容 |
+| `Config` | 配置数据类（rules, exclude_patterns, exclude_dirs） |
+
+---
 
 ## dupes.py — 重复文件检测
-- `find_duplicates()` — 核心查找函数（size 预过滤 → SHA-256 哈希）
-- `DupesResult` — 检测结果数据类
-- `delete_duplicates()` — 安全删除（支持 newest/oldest/path 策略）
-- 多线程并行哈希（ThreadPoolExecutor, max 4 workers）
 
-## ignore.py — .fcleanignore 解析器
-- `IgnoreRules` — 规则集合类（正向匹配 + ! 取反）
-- `load_ignore_rules()` — 加载 .fcleanignore 文件
-- 支持 glob、目录模式、路径模式
-- `filter_files()` — 过滤文件列表
+| 函数 | 功能 |
+|------|------|
+| `find_duplicates(target_path, ...)` | 查找重复文件（size→hash 两遍扫描） |
+| `DupesResult` | 结果类（has_duplicates, delete, to_dict, print_table） |
 
-## organizer.py — 文件整理
-- `organize()` — 核心整理函数
-- `OrganizeResult` — 整理结果数据类
-- dry-run/execute 双模式，自动重名处理
+---
+
+## ignore.py — .fcleanignore
+
+| 函数 | 功能 |
+|------|------|
+| `load_ignore_rules(directory)` | 从目录加载 .fcleanignore 规则 |
+| `IgnoreRules` | 规则类（matches, filter_files, has_rules） |
+
+---
 
 ## renamer.py — 批量重命名
-- `RenamePlan` — 重命名计划类
-- `generate_rename_plan()` — 生成重命名方案
-- 模板变量：{n}, {n:03d}, {date}, {ext}
-- 冲突自动处理（数字后缀）
 
-## rules.py — 文件分类规则
-- `classify()` — 根据扩展名分类
-- `get_dir_name()` — 获取目标目录名
-- 7 大类 100+ 扩展名
+| 函数 | 功能 |
+|------|------|
+| `generate_rename_plan(target_dir, glob_pattern, template)` | 生成重命名计划 |
+| `RenamePlan` | 计划类（get_rename_pairs, execute, pattern, format_template） |
 
-## undo.py — 操作回滚
-- `UndoManager` — 回滚管理器
-- `record_operation()` — 记录操作到 JSON 日志
-- `undo_last()` — 回滚最近操作
-- `list_undo_logs()` — 列出所有历史操作
+---
+
+## undo.py — Undo 回滚
+
+| 函数 | 功能 |
+|------|------|
+| `record_operation(result)` | 记录整理操作到 JSON 日志 |
+| `undo_last()` | 回滚上一次操作 |
+| `list_undo_logs()` | 列出所有 undo 日志 |
+
+---
 
 ## watcher.py — 文件监控
-- `watch_directory()` — 启动文件监控
-- watchdog Observer + FcleanHandler（继承 FileSystemEventHandler）
-- 防抖机制（默认 2 秒 debounce）
-- .fcleanignore 集成
-- --auto 模式自动执行（默认 dry-run）
+
+| 函数 | 功能 |
+|------|------|
+| `watch_directory(target_path, ...)` | 启动文件监控（watchdog） |
+| `FcleanHandler` | 事件处理器（防抖、忽略规则、触发 organize） |

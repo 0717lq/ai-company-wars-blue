@@ -30,6 +30,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional
 
+# 类型别名
 from fclean import __version__
 from fclean.config import (
     Config,
@@ -421,7 +422,7 @@ def _print_rename_result(executed_count: int, json_output: bool = False):
 # ── Stats JSON 输出 ────────────────────────────────────────
 
 
-def _stats_to_json(stats: dict, path: str) -> dict:
+def _stats_to_json(stats: dict, path: str, top_files: Optional[list] = None) -> dict:
     """将 stats 结果转为 JSON dict。"""
     categories = {}
     for cat_name, data in stats["categories"].items():
@@ -430,13 +431,18 @@ def _stats_to_json(stats: dict, path: str) -> dict:
             "size_bytes": data["size"],
         }
 
-    return _make_json_envelope("stats", {
+    result = _make_json_envelope("stats", {
         "path": path,
         "total_files": stats["total_files"],
         "total_size_bytes": stats["total_size"],
         "total_size_human": _format_size(stats["total_size"]),
         "categories": categories,
     })
+
+    if top_files:
+        result["top_files"] = top_files
+
+    return result
 
 
 # ── Undo/History JSON 输出 ─────────────────────────────────
@@ -629,6 +635,22 @@ def build_parser():
         action="store_true",
         default=False,
         help="自动执行整理（watch 子命令专用，默认 dry-run）",
+    )
+
+    # stats 子命令的选项
+    parser.add_argument(
+        "--chart",
+        action="store_true",
+        default=False,
+        help="输出 ASCII 图表可视化（stats 子命令专用）",
+    )
+
+    parser.add_argument(
+        "--top",
+        type=int,
+        default=None,
+        metavar="N",
+        help="列出占用空间最大的 N 个文件（stats 子命令专用）",
     )
 
     return parser
@@ -888,11 +910,25 @@ def _run_stats(args):
         print(f"❌ 错误: {e}", file=sys.stderr)
         sys.exit(1)
 
-    # JSON 输出
+    # 处理 --top N：查找大文件
+    top_files_data = None
+    if args.top is not None and args.top > 0:
+        from fclean.stats_viz import find_top_files
+        top_files_data = find_top_files(target_path, args.top)
+
+    # JSON 输出（忽略 --chart）
     if args.json:
-        _print_json(_stats_to_json(stats, target_path))
+        top_json = None
+        if top_files_data:
+            top_json = [
+                {"path": f["path"], "name": f["name"],
+                 "size_bytes": f["size"], "size_human": f["size_human"]}
+                for f in top_files_data
+            ]
+        _print_json(_stats_to_json(stats, target_path, top_files=top_json))
         return
 
+    # 基础统计表格
     if has_rich:
         console = Console()
         console.print()
@@ -939,10 +975,31 @@ def _run_stats(args):
         print(f"文件总数: {stats['total_files']}  |  总大小: {_format_size(stats['total_size'])}")
         print()
 
+        if stats["total_files"] == 0:
+            print("该目录为空。")
+            return
+
         cats = stats["categories"]
         for cat_name in sorted(cats.keys()):
             data = cats[cat_name]
             print(f"  {cat_name}: {data['count']} 个文件 ({_format_size(data['size'])})")
+        print()
+
+    # --chart：ASCII 图表
+    if args.chart:
+        from fclean.stats_viz import render_bar_chart, render_pie_chart
+        pie = render_pie_chart(stats)
+        bar = render_bar_chart(stats)
+        print(pie)
+        print()
+        print(bar)
+        print()
+
+    # --top N：大文件排行
+    if top_files_data:
+        from fclean.stats_viz import render_top_files
+        print(render_top_files(top_files_data))
+        print()
 
 
 def _run_config(args):

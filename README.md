@@ -104,6 +104,8 @@ fclean --undo
 | `fclean init` | Generate `.fcleanrc` configuration |
 | `fclean init --global` | Generate config to `~/.fcleanrc` |
 | `fclean stats <path>` | Show directory file statistics |
+| `fclean stats --chart <path>` | Stats with ASCII pie/bar chart |
+| `fclean stats --top 10 <path>` | Top 10 largest files |
 | `fclean config` | Display current configuration |
 | `fclean rename "*.jpg" --pattern "vacation_{n:03d}"` | Preview batch rename |
 | `fclean rename "*.jpg" --pattern "vacation_{n:03d}" --execute` | Execute batch rename |
@@ -403,6 +405,27 @@ Features:
 - Respects `.fcleanignore` rules
 - Ctrl+C to stop gracefully
 
+### 📊 Stats Visualization
+
+```bash
+# ASCII pie chart + bar chart
+fclean stats --chart ~/Downloads
+
+# Top 10 largest files
+fclean stats --top 10 ~/Downloads
+
+# Combine both
+fclean stats --chart --top 10 ~/Downloads
+
+# JSON output (includes top files data)
+fclean stats --top 5 --json ~/Downloads
+```
+
+Features:
+- **`--chart`**: Dual ASCII visualization — file count distribution + space usage distribution
+- **`--top N`**: Top-N largest files ranking with size bars
+- Works with `--json` (chart is ignored, top files data is included in JSON)
+
 ### 🧪 Development
 
 ```bash
@@ -510,6 +533,8 @@ fclean --undo
 | `fclean init` | 生成 `.fcleanrc` 配置文件 |
 | `fclean init --global` | 生成配置到 `~/.fcleanrc` |
 | `fclean stats <path>` | 目录文件统计 |
+| `fclean stats --chart <path>` | 带 ASCII 图表的统计 |
+| `fclean stats --top 10 <path>` | Top 10 大文件排行 |
 | `fclean config` | 查看当前配置 |
 | `fclean rename "*.jpg" --pattern "vacation_{n:03d}"` | 预览批量重命名 |
 | `fclean rename "*.jpg" --pattern "vacation_{n:03d}" --execute` | 执行批量重命名 |
@@ -743,6 +768,27 @@ fclean watch --json ~/Downloads
 - 防抖机制（默认 2 秒）— 等文件写入完成再触发
 - 自动读取 `.fcleanignore` 规则
 - Ctrl+C 优雅退出
+
+### 📊 统计可视化
+
+```bash
+# ASCII 饼图 + 柱状图
+fclean stats --chart ~/Downloads
+
+# Top 10 大文件排行
+fclean stats --top 10 ~/Downloads
+
+# 组合使用
+fclean stats --chart --top 10 ~/Downloads
+
+# JSON 输出（包含 top files 数据）
+fclean stats --top 5 --json ~/Downloads
+```
+
+功能特点：
+- **`--chart`**：双维度 ASCII 可视化 — 文件数量分布 + 空间占用分布
+- **`--top N`**：大文件 Top-N 排行，带大小条形图
+- 与 `--json` 兼容（图表忽略，top files 数据包含在 JSON 中）
 
 ### 🧪 开发与贡献
 
