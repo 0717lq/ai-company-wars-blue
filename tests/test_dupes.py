@@ -246,7 +246,7 @@ class TestDeleteAndStrategy:
         deleted = result.delete(strategy="newest")
         assert len(deleted) == 1
         # The deleted path should not exist
-        for keep, delete_path in deleted:
+        for _keep, delete_path in deleted:
             assert delete_path.exists() is False
 
     def test_no_delete_plan_no_duplicates(self):
@@ -279,7 +279,7 @@ class TestDupesResultDict:
         assert d["duplicate_files"] == 1
         assert len(d["groups"]) == 1
         # Check group structure
-        for hash_val, group in d["groups"].items():
+        for _hash_val, group in d["groups"].items():
             assert "files" in group
             assert "count" in group
             assert "size_bytes" in group

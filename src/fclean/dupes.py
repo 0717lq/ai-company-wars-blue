@@ -60,11 +60,11 @@ def _parse_size_arg(size_str: str) -> int:
                 num = float(size_str[: -len(suffix)])
                 return int(num * mult)  # type: ignore[return-value]
             except ValueError:
-                raise ValueError(f"无法解析大小参数: {size_str}")
+                raise ValueError(f"无法解析大小参数: {size_str}") from None
     try:
         return int(size_str)
     except ValueError:
-        raise ValueError(f"无法解析大小参数: {size_str}")
+        raise ValueError(f"无法解析大小参数: {size_str}") from None
 
 
 class DupesResult:
@@ -280,7 +280,7 @@ class DupesResult:
         plan = self.get_delete_plan(strategy)
         results: list[tuple[Path, Path]] = []
 
-        for hash_val, pairs in plan.items():
+        for _hash_val, pairs in plan.items():
             if not pairs:
                 continue
 
@@ -377,7 +377,7 @@ def find_duplicates(
             if entry.is_file():
                 files.append(entry)
     except PermissionError as e:
-        raise PermissionError(f"没有权限读取目录 {target}: {e}")
+        raise PermissionError(f"没有权限读取目录 {target}: {e}") from e
 
     # 第2步：按 size 分组，跳过小文件
     size_groups: dict[int, list[Path]] = {}
@@ -404,7 +404,7 @@ def find_duplicates(
 
     # 第3步：对同 size 的文件进行哈希
     files_to_hash: list[Path] = []
-    for size, paths in size_groups.items():
+    for _size, paths in size_groups.items():
         if len(paths) > 1:
             files_to_hash.extend(paths)
 

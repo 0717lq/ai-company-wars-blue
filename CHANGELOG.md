@@ -1,5 +1,46 @@
 # Changelog
 
+## [v0.6.0] — 2026-06-01 — Plugin Platform & Code Quality
+
+### 🆕 新功能 / New Features
+
+#### 🔌 插件系统 (P0) — 可扩展平台
+- **`fclean plugin list`**: 列出已安装插件
+- **`fclean plugin info <name>`**: 查看插件详情（版本、描述、支持的 hooks）
+- **`fclean plugin install <file.py>`**: 安装插件文件到 `~/.fclean/plugins/`
+- **`fclean plugin create <name>`**: 生成插件模板（含 classify/transform/summarize 三个 hook）
+- **`fclean plugin uninstall <name>`**: 卸载插件
+- 所有 plugin 子命令支持 `--json` 输出
+- **差异化设计**（vs 红队 dirsort 插件系统）：
+  - `classify`: 文件分类（必须实现）
+  - `transform`: 自定义移动目标路径（可选）— 红队无此 hook
+  - `summarize`: 自定义统计报告格式（可选）— 红队无此 hook
+- 插件异常不影响主流程（容错机制）
+
+#### 📐 CLI 架构重构 (P1) — 消除"上帝文件"
+- `cli.py` 从 1331 行拆分为 3 个模块：
+  - `cli.py` (~280 行): 纯参数解析 + main() 入口
+  - `commands.py` (~550 行): 所有 _run_* 命令执行逻辑
+  - `formatters.py` (~310 行): JSON 序列化 + Rich/纯文本显示
+- 职责清晰、可测试性提升、消除循环依赖风险
+
+### ⚙️ 工程化 / Engineering
+- **Ruff 配置升级**: 4 套规则 → 7 套（新增 N/命名规范、UP/pyupgrade、B/bugbear）
+- 修复所有 B904（raise from）、B007（unused loop var）、UP015（unnecessary mode）问题
+- 版本号更新至 v0.6.0
+- `KNOWN_SUBCOMMANDS` 新增 `"plugin"`
+
+### 🧪 测试强化 / Test Improvements
+- **新增 test_plugin.py**: 35 个插件系统测试
+  - PluginBase 抽象类测试（不能直接实例化、默认 hook 返回 None、元信息）
+  - PluginManager 测试（加载、跳过下划线文件、损坏文件容错、安装/卸载/列出）
+  - Hook 执行测试（classify/transform/summarize 匹配、异常容错、优先级）
+  - 模板生成测试（合法 Python、包含所有 hook）
+  - CLI 集成测试（list、info、JSON 输出）
+- 总测试数：273 个（较 v0.5.0 的 238 个增加 35 个）
+
+---
+
 ## [v0.5.0] — 2026-05-30 — Production Pipeline & Developer Integration
 
 ### 🆕 新功能 / New Features

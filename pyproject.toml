@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "fclean"
-version = "0.5.0"
+version = "0.6.0"
 description = "A safe, colorful CLI tool to organize messy folders by file type — dry-run preview, undo rollback, rich output, configurable rules"
 readme = "README.md"
 requires-python = ">=3.9"
@@ -86,7 +86,8 @@ target-version = "py39"
 line-length = 100
 
 [tool.ruff.lint]
-select = ["E", "F", "I", "W"]
+select = ["E", "F", "I", "W", "N", "UP", "B"]
+ignore = ["N802", "N803", "N806"]  # 允许部分命名风格（与现有代码兼容）
 
 [tool.coverage.run]
 source = ["src"]

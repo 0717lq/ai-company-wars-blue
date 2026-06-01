@@ -146,7 +146,7 @@ def render_bar_chart(stats: dict, width: int = 40) -> str:
 
     for row in range(max_bar_height, 0, -1):
         line = "  "
-        for cat_name, count, height in bars:
+        for _cat_name, _count, height in bars:
             if height >= row:
                 line += "  ██   "
             else:
@@ -161,13 +161,13 @@ def render_bar_chart(stats: dict, width: int = 40) -> str:
 
     # 类别名
     name_line = "  "
-    for cat_name, count, height in bars:
+    for cat_name, _count, _height in bars:
         name_line += f"{cat_name[:6]:^7}"
     lines.append(name_line)
 
     # 数量
     count_line = "  "
-    for cat_name, count, height in bars:
+    for _cat_name, count, _height in bars:
         count_line += f"{count:^7}"
     lines.append(count_line)
 

@@ -193,7 +193,7 @@ def scan_directory(
                 if not entry.name.startswith("."):
                     continue
     except PermissionError as e:
-        raise PermissionError(f"没有权限读取目录 {target_dir}: {e}")
+        raise PermissionError(f"没有权限读取目录 {target_dir}: {e}") from e
 
     return files
 

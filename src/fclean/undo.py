@@ -96,7 +96,7 @@ def undo_last() -> OrganizeResult:
         raise FileNotFoundError("没有找到 undo 记录，没有可回滚的操作")
 
     # 读取日志
-    with open(log_path, "r", encoding="utf-8") as f:
+    with open(log_path, encoding="utf-8") as f:
         log_data = json.load(f)
 
     # 执行回滚
@@ -149,7 +149,7 @@ def list_undo_logs() -> list[dict]:
     for log in sorted(UNDO_DIR.iterdir(), reverse=True):
         if log.suffix == ".json" and log.is_file():
             try:
-                with open(log, "r", encoding="utf-8") as f:
+                with open(log, encoding="utf-8") as f:
                     data = json.load(f)
                 logs.append({
                     "path": str(log),
