@@ -2,7 +2,7 @@
   <img src="https://img.shields.io/badge/python-3.9+-blue.svg?style=for-the-badge&logo=python&logoColor=white" alt="Python 3.9+">
   <img src="https://img.shields.io/badge/license-MIT-green.svg?style=for-the-badge" alt="MIT License">
   <img src="https://img.shields.io/github/actions/workflow/status/0717lq/ai-company-wars-blue/ci.yml?style=for-the-badge&logo=github" alt="CI">
-  <img src="https://img.shields.io/badge/tests-238%20passed-brightgreen?style=for-the-badge&logo=pytest" alt="238 tests passed">
+  <img src="https://img.shields.io/badge/tests-273%20passed-brightgreen?style=for-the-badge&logo=pytest" alt="273 tests passed">
   <img src="https://img.shields.io/badge/PRs-welcome-orange.svg?style=for-the-badge" alt="PRs Welcome">
   <img src="https://img.shields.io/github/v/release/0717lq/ai-company-wars-blue?style=for-the-badge&logo=github" alt="Latest Release">
 </p>
@@ -28,12 +28,23 @@
 [![CI](https://github.com/0717lq/ai-company-wars-blue/actions/workflows/ci.yml/badge.svg)](https://github.com/0717lq/ai-company-wars-blue/actions/workflows/ci.yml)
 [![Python 3.9+](https://img.shields.io/badge/python-3.9%2B-blue)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
-[![Tests](https://img.shields.io/badge/tests-238%20passed-brightgreen)](https://github.com/0717lq/ai-company-wars-blue/actions/workflows/ci.yml)
+[![Tests](https://img.shields.io/badge/tests-273%20passed-brightgreen)](https://github.com/0717lq/ai-company-wars-blue/actions/workflows/ci.yml)
 [![Release](https://img.shields.io/github/v/release/0717lq/ai-company-wars-blue)](https://github.com/0717lq/ai-company-wars-blue/releases)
 
 ---
 
 ## 🎉 What's New
+
+### v0.6.0 — "Plugin System" 🔌 *(2026-06-01)*
+
+> From monolith to modular — extensible plugin architecture + CLI code restructured for maintainability.
+
+| New Feature | Description | How to Use |
+|-------------|-------------|------------|
+| 🔌 **Plugin System** | PluginBase + PluginManager: install, create, manage plugins | `fclean plugin list` |
+| 🛠️ **Plugin Hooks** | `classify` + `transform` (custom move targets) + `summarize` (custom reports) | `fclean plugin create my-plugin` |
+| 📐 **CLI Refactor** | 1331→3 modules: cli.py + commands.py + formatters.py | Cleaner, faster development |
+| ⚙️ **Ruff 7 Rules** | N/UP/B lint rules added, all B904/B007/UP015 fixed | `ruff check src/` |
 
 ### v0.5.0 — "Production Pipeline" 🚀 *(2026-05-31)*
 
@@ -71,6 +82,7 @@
 | 🗂️ **Duplicate detection** | `fclean dupes` — SHA-256 hash, safe delete, undo |
 | 🤖 **AI Agent native** | `--json` output on every command, Agent Skill file |
 | ⚡ **Zero config** | Works out of the box, no setup needed |
+| 🔌 **Plugin system** | Extensible architecture — classify, transform, summarize hooks |
 
 ### 🚀 Installation
 
@@ -127,6 +139,11 @@ fclean --undo
 | `fclean rename "*.jpg" --pattern "vacation_{n:03d}" --execute` | Execute batch rename |
 | `fclean dupes <path>` | Find duplicate files (SHA-256) |
 | `fclean dupes <path> --delete` | Delete duplicate files safely |
+| `fclean plugin list` | List installed plugins |
+| `fclean plugin create <name>` | Create a new plugin scaffold |
+| `fclean plugin install <name>` | Install a plugin |
+| `fclean plugin info <name>` | Show plugin details |
+| `fclean plugin uninstall <name>` | Remove a plugin |
 | `fclean --json <path>` | JSON output for AI Agent |
 | `fclean --undo` | Rollback last operation |
 | `fclean --history` | View undo history |
@@ -179,13 +196,16 @@ fclean dupes --json ~/Downloads
 # AI Agent: preview rename as JSON
 fclean rename "*.jpg" --pattern "vacation_{n:03d}" --json
 
+# AI Agent: list plugins as JSON
+fclean plugin list --json
+
 # AI Agent: undo result as JSON
 fclean --json --undo
 ```
 
 **JSON Schema — All outputs include:**
 - `tool`: always `"fclean"`
-- `command`: subcommand name (`organize`, `stats`, `rename`, `dupes`, `undo`, `history`)
+- `command`: subcommand name (`organize`, `stats`, `rename`, `dupes`, `undo`, `history`, `plugin`)
 - `timestamp`: ISO 8601 UTC timestamp
 - Plus command-specific structured data
 
@@ -339,6 +359,7 @@ fclean config
 | One-click undo (rename) | ✅ **Built-in** | ❌ | ❌ | ❌ |
 | Batch rename | ✅ **Yes** | ❌ | ❌ | — |
 | Duplicate detection | ✅ **SHA-256** | ❌ | ❌ | — |
+| Plugin system | ✅ **Native** | ✅ Extensions | ❌ | — |
 | AI Agent native (`--json`) | ✅ **Yes** | ❌ | ❌ | ❌ |
 | Shell completion ($SHELL) | ✅ **Yes** | ❌ | ❌ | ❌ |
 | Agent Skill file | ✅ **Hermes/Claude** | ❌ | ❌ | ❌ |
@@ -349,8 +370,8 @@ fclean config
 | Stats visualization (charts) | ✅ **ASCII pie+bar** | ❌ | ❌ | — |
 | Zero config out of box | ✅ **Yes** | ✅ | ❌ | — |
 | Safety-first design | ✅ **Default dry-run** | ⚠️ Dry-run exists | ⚠️ | ❌ |
-| Number of subcommands | **6 🏆** | 1 | ~8 | — |
-| Test coverage | **238 tests ✅** | Good | Moderate | — |
+| Number of subcommands | **7 🏆** | 1 | ~8 | — |
+| Test coverage | **273 tests ✅** | Good | Moderate | — |
 | Docker support | ✅ **Yes** | ✅ | ❌ | — |
 | Pre-commit hook | ✅ **Yes** | ✅ | ❌ | — |
 
@@ -377,7 +398,7 @@ Add to `.pre-commit-config.yaml`:
 ```yaml
 repos:
   - repo: https://github.com/0717lq/ai-company-wars-blue
-    rev: v0.5.0
+    rev: v0.6.0
     hooks:
       - id: fclean-organize
         # Add --execute to actually move files (default: dry-run)
@@ -505,6 +526,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed contribution guidelines.
 | 🤖 **AI Agent 原生** | 全命令 `--json` 输出，结构化数据，Agent Skill 文件 |
 | ⌨️ **Shell 补全** | `fclean --install-completion` 支持 bash/zsh/fish |
 | ⚡ **零配置** | 安装即用，无需任何配置文件 |
+| 🔌 **插件系统** | 可扩展架构 — classify / transform / summarize 三种 hook |
 
 ### 🚀 安装
 
@@ -559,6 +581,11 @@ fclean --undo
 | `fclean rename "*.jpg" --pattern "vacation_{n:03d}" --execute` | 执行批量重命名 |
 | `fclean dupes <path>` | 检测重复文件（SHA-256） |
 | `fclean dupes <path> --delete` | 安全删除重复文件 |
+| `fclean plugin list` | 列出已安装插件 |
+| `fclean plugin create <name>` | 创建插件脚手架 |
+| `fclean plugin install <name>` | 安装插件 |
+| `fclean plugin info <name>` | 查看插件详情 |
+| `fclean plugin uninstall <name>` | 卸载插件 |
 | `fclean --json <path>` | JSON 输出（AI Agent 友好） |
 | `fclean --undo` | 回滚上一次操作 |
 | `fclean --history` | 查看回滚历史 |
@@ -644,13 +671,16 @@ fclean dupes --json ~/Downloads
 # AI Agent：批量重命名预览（JSON）
 fclean rename "*.jpg" --pattern "vacation_{n:03d}" --json
 
+# AI Agent：列出插件（JSON）
+fclean plugin list --json
+
 # AI Agent：回滚结果（JSON）
 fclean --json --undo
 ```
 
 **JSON Schema — 所有输出包含：**
 - `tool`: 固定为 `"fclean"`
-- `command`: 子命令名称（`organize`, `stats`, `rename`, `dupes`, `undo`, `history`）
+- `command`: 子命令名称（`organize`, `stats`, `rename`, `dupes`, `undo`, `history`, `plugin`）
 - `timestamp`: ISO 8601 UTC 时间戳
 - 以及命令特有的结构化数据
 
@@ -741,7 +771,7 @@ docker run --rm -v ~/Downloads:/data fclean --json /data
 ```yaml
 repos:
   - repo: https://github.com/0717lq/ai-company-wars-blue
-    rev: v0.5.0
+    rev: v0.6.0
     hooks:
       - id: fclean-organize
         # 加 --execute 才实际移动文件（默认 dry-run）

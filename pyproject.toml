@@ -33,6 +33,9 @@ keywords = [
     "docker",
     "pre-commit",
     "production-ready",
+    "plugin-system",
+    "extensible",
+    "file-classifier",
 ]
 classifiers = [
     "Programming Language :: Python :: 3",
@@ -40,6 +43,7 @@ classifiers = [
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
     "License :: OSI Approved :: MIT License",
     "Environment :: Console",
     "Operating System :: OS Independent",

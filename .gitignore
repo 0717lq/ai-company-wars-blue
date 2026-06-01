@@ -40,3 +40,9 @@ Thumbs.db
 
 # Monorepo artifact (created when project is run inside monorepo context)
 /teams/
+
+# Monorepo pollution (ai-company-wars outer repo)
+/teams/
+/shared/
+/scripts/
+/runtime/
