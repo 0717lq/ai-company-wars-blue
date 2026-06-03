@@ -9,3 +9,7 @@ build/
 .pytest_cache/
 .ruff_cache/
 .ruff_cache/.gitignore
+
+# Coverage
+.coverage
+htmlcov/

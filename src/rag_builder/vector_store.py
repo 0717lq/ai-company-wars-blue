@@ -152,17 +152,17 @@ class MilvusStore(VectorStore):
             )
 
     def _create_collection(
-        self, Collection: type, CollectionSchema: type,
-        DataType: type, FieldSchema: type,
+        self, collection_cls: type, collection_schema_cls: type,
+        data_type_cls: type, field_schema_cls: type,
     ) -> Any:
         """创建 Milvus collection。"""
         fields = [
-            FieldSchema(name="id", dtype=DataType.VARCHAR, is_primary=True, max_length=128),
-            FieldSchema(name="text", dtype=DataType.VARCHAR, max_length=65535),
-            FieldSchema(name="embedding", dtype=DataType.FLOAT_VECTOR, dim=self._dimension),
+            field_schema_cls(name="id", dtype=data_type_cls.VARCHAR, is_primary=True, max_length=128),
+            field_schema_cls(name="text", dtype=data_type_cls.VARCHAR, max_length=65535),
+            field_schema_cls(name="embedding", dtype=data_type_cls.FLOAT_VECTOR, dim=self._dimension),
         ]
-        schema = CollectionSchema(fields=fields, enable_dynamic_field=True)
-        collection = Collection(self._collection_name, schema)
+        schema = collection_schema_cls(fields=fields, enable_dynamic_field=True)
+        collection = collection_cls(self._collection_name, schema)
 
         # 创建 HNSW 索引
         index_params = {
