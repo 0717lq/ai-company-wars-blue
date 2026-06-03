@@ -3,106 +3,23 @@ requires = ["setuptools>=68.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "fclean"
-version = "0.6.0"
-description = "A safe, colorful CLI tool to organize messy folders by file type — dry-run preview, undo rollback, rich output, configurable rules"
+name = "rag-builder"
+version = "0.1.0"
+description = "RAG pipeline builder toolkit — config validation, scaffolding, benchmarking"
 readme = "README.md"
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 license = {text = "MIT"}
-keywords = [
-    "file-organizer",
-    "file-cleaner",
-    "cli",
-    "utility",
-    "downloads-organizer",
-    "file-management",
-    "filesystem",
-    "productivity",
-    "rich",
-    "dry-run",
-    "undo",
-    "fclean",
-    "folder-organizer",
-    "file-sorter",
-    "duplicate-files",
-    "batch-rename",
-    "file-watcher",
-    "ignore-rules",
-    "ascii-chart",
-    "stats-visualization",
-    "docker",
-    "pre-commit",
-    "production-ready",
-    "plugin-system",
-    "extensible",
-    "file-classifier",
-]
-classifiers = [
-    "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.9",
-    "Programming Language :: Python :: 3.10",
-    "Programming Language :: Python :: 3.11",
-    "Programming Language :: Python :: 3.12",
-    "Programming Language :: Python :: 3.13",
-    "License :: OSI Approved :: MIT License",
-    "Environment :: Console",
-    "Operating System :: OS Independent",
-    "Topic :: Utilities",
-    "Topic :: System :: Filesystems",
-    "Intended Audience :: End Users/Desktop",
-    "Intended Audience :: Developers",
-]
-dependencies = [
-    "rich>=13.0.0",
-    "PyYAML>=6.0",
-]
 
 [project.optional-dependencies]
-watch = [
-    "watchdog>=3.0",
-]
-dev = [
-    "pytest>=7.0",
-    "pyfakefs>=5.0",
-    "pytest-cov>=5.0",
-    "ruff>=0.5.0",
-    "watchdog>=3.0",
-]
-
-[project.urls]
-Homepage = "https://github.com/0717lq/ai-company-wars-blue"
-Repository = "https://github.com/0717lq/ai-company-wars-blue"
-Changelog = "https://github.com/0717lq/ai-company-wars-blue/releases"
-BugTracker = "https://github.com/0717lq/ai-company-wars-blue/issues"
-
-[project.scripts]
-fclean = "fclean.cli:main"
-
-[tool.setuptools.packages.find]
-where = ["src"]
+dev = ["pytest>=7.0", "pytest-cov>=4.0", "ruff>=0.4"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-python_files = ["test_*.py"]
+addopts = "-v --tb=short"
 
 [tool.ruff]
-target-version = "py39"
 line-length = 100
+target-version = "py310"
 
 [tool.ruff.lint]
-select = ["E", "F", "I", "W", "N", "UP", "B"]
-ignore = ["N802", "N803", "N806"]  # 允许部分命名风格（与现有代码兼容）
-
-[tool.coverage.run]
-source = ["src"]
-omit = ["*/tests/*", "*/__main__.py"]
-
-[tool.coverage.report]
-exclude_lines = [
-    "pragma: no cover",
-    "if __name__ == .__main__.:",
-    "except ImportError:",
-    "raise NotImplementedError",
-    "if has_rich:",
-    "if not has_rich:",
-]
+select = ["E", "F", "W", "I", "N", "UP", "B"]

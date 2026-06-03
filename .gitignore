@@ -1,48 +1,11 @@
 # Python
 __pycache__/
-*.py[cod]
-*$py.class
-*.so
+*.pyc
+*.pyo
+.venv/
 *.egg-info/
 dist/
 build/
-*.egg
-.eggs/
-
-# Virtual environments
-.venv/
-venv/
-env/
-.env/
-
-# Testing
 .pytest_cache/
-.mypy_cache/
-.coverage
-htmlcov/
-.coverage.*
-*.cover
-
-# IDE
-.vscode/
-.idea/
-*.swp
-*.swo
-*~
-
-# OS
-.DS_Store
-Thumbs.db
-*.~
-
-# Project specific
-*.undo
-
-# Monorepo artifact (created when project is run inside monorepo context)
-/teams/
-
-# Monorepo pollution (ai-company-wars outer repo)
-/teams/
-/shared/
-/scripts/
-/runtime/
+.ruff_cache/
+.ruff_cache/.gitignore

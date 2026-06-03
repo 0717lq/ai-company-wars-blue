@@ -1,92 +1,85 @@
-# fclean v0.6.0 — 核心代码文档
+# 核心代码说明
 
-## 插件系统 API
+## config_schema.py
 
-### PluginBase (plugin.py)
+### 数据类 (5 个)
 
-```python
-from fclean.plugin import PluginBase
+| 类 | 核心属性 | 验证逻辑 |
+|---|---------|---------|
+| `ChunkingConfig` | strategy, chunk_size, chunk_overlap, min_chunk_size | 策略合法性、size 范围、overlap < size |
+| `EmbeddingConfig` | model, batch_size, device, normalize | 模型名在预设中、batch 范围、device 合法 |
+| `VectorStoreConfig` | backend, collection, metric, index_type | 后端/度量/索引类型合法性、collection 非空 |
+| `RetrieverConfig` | strategy, top_k, rerank_top_n, weights | 策略合法性、rerank ≤ top_k、权重范围 |
+| `QueryConfig` | decompose, decompose_strategy, max_sub_queries | 策略合法性、sub_queries 范围 |
 
-class MyPlugin(PluginBase):
-    name = "my-plugin"          # 插件名（必须）
-    version = "1.0.0"           # 版本号（必须）
-    description = "描述"        # 描述（必须）
+### `RAGConfig`
+聚合 5 个子配置，提供：
+- `validate()`: 收集所有子配置错误 + 交叉验证（chunk_size ≤ 模型 max_seq_length）
+- `to_dict()` / `from_dict()`: 序列化往返
 
-    def classify(self, file_path: Path) -> str | None:
-        """分类文件。返回类别名或 None（不处理）。"""
+### `estimate_gpu_vram(config) -> dict`
+根据嵌入模型预设 + batch_size + reranker 显存估算总需求。
+返回 `{embedding, reranker, total, fits_8gb}`。
 
-    def transform(self, file_path: Path, category: str) -> Path | None:
-        """自定义移动目标。返回目标路径或 None（用默认规则）。"""
+---
 
-    def summarize(self, stats: dict) -> str | None:
-        """自定义报告格式。返回报告文本或 None（用默认格式）。"""
-```
+## scaffold.py
 
-### PluginManager (plugin_manager.py)
+### `_render(template, **kwargs)`
+用 `$VAR` 占位符替换模板变量。避免 Python f-string `{}` 与模板变量冲突。
 
-```python
-from fclean.plugin_manager import PluginManager
+### `scaffold_project(config, output_dir, project_name) -> dict`
+根据 RAGConfig 生成 6 个文件：ingest.py, query.py, config.py, README.md, requirements.txt, rag_config.json。
+返回 `{filename: content}` 字典。
 
-manager = PluginManager(plugin_dir=Path("~/.fclean/plugins"))
-manager.discover_and_load()          # 扫描并加载插件
-manager.install_plugin(source_path)  # 安装插件
-manager.uninstall_plugin("name")     # 卸载插件
-manager.list_plugins()               # 列出所有插件
-manager.get_plugin_info("name")      # 获取插件详情
+---
 
-# Hook 执行（链式调用，第一个非 None 结果胜出）
-category = manager.run_classify(file_path)
-target = manager.run_transform(file_path, category)
-report = manager.run_summarize(stats)
-```
+## benchmark.py
 
-## CLI 架构
+### `BenchmarkResult.compute_metrics()`
+计算 precision = |hits|/|retrieved|, recall = |hits|/|expected|, F1。
+边界处理：expected 为空时 recall=1.0。
 
-### 入口 (cli.py)
-- `build_parser()`: 构建 argparse 解析器
-- `main()`: CLI 主入口，路由到 commands.py 的 run_* 函数
-- `_install_completion()`: bash/zsh/fish 补全安装
-- `_parse_plugin_args()`: plugin 子命令额外参数解析
+### `BenchmarkReport`
+聚合多个 BenchmarkResult，计算 avg_precision/recall/f1。
+提供 `to_json()` 和 `summary()` 两种输出格式。
 
-### 命令执行 (commands.py)
-- `run_organize(args, config)`: 文件整理
-- `run_stats(args)`: 目录统计
-- `run_rename(args)`: 批量重命名
-- `run_dupes(args)`: 重复文件检测
-- `run_watch(args)`: 文件监控
-- `run_init(args)`: 生成配置文件
-- `run_config(args)`: 查看当前配置
-- `run_plugin(args)`: 插件管理
+### `run_benchmark(queries, retrieve_fn, config_name) -> BenchmarkReport`
+接受 retrieve_fn 回调（接收 query，返回文本列表或 dict 列表），自动计算评估指标。
 
-### 格式化 (formatters.py)
-- `make_json_envelope(command, data)`: 统一 JSON 包装
-- `print_json(data)`: JSON 输出
-- `organize_to_json(result)`: OrganizeResult → JSON
-- `stats_to_json(stats, path)`: 统计 → JSON
-- `rename_to_json(plan, pairs)`: 重命名 → JSON
-- `undo_to_json(result)`: Undo → JSON
-- `history_to_json(logs)`: 历史 → JSON
-- Rich/纯文本双模式显示函数（print_dry_run, print_execute_result 等）
+### `generate_ragas_dataset(queries, retrieve_fn, generate_fn) -> list[dict]`
+生成 RAGAS `evaluate()` 兼容数据集：`{question, ground_truth, contexts, answer}`。
 
-## 核心业务模块
+---
 
-### organizer.py
-- `organize(target_path, dry_run, execute, ...)`: 主入口
-- `compute_stats(target_path, config)`: 统计计算
-- `FileInfo`: 文件信息类
-- `OrganizeResult`: 结果类
+## cli.py
 
-### config.py
-- `load_config(target_path)`: 加载配置（当前目录 > 用户目录 > 默认）
-- `Config.to_dict()`: 序列化
-- `generate_example_config()`: 生成示例配置
+### 子命令
 
-### dupes.py
-- `find_duplicates(target_path, min_size, ...)`: 查找重复文件
-- `DupesResult.delete(strategy, interactive)`: 删除重复文件
-- `_parse_size(size_str)`: 解析 "1MB" 等大小字符串
+| 命令 | 功能 | 关键参数 |
+|------|------|---------|
+| `init` | 生成示例配置 | `-o output` |
+| `validate` | 验证配置 + 显存估算 | `config.json` |
+| `scaffold` | 生成项目骨架 | `config.json -o dir -n name` |
+| `benchmark` | 运行评估 | `gt.json --config name --json -o report` |
 
-### renamer.py
-- `generate_rename_plan(target_dir, glob_pattern, template)`: 生成重命名计划
-- `RenamePlan.get_rename_pairs()`: 获取重命名对
-- `RenamePlan.execute()`: 执行重命名
+### `cmd_benchmark`
+使用 dummy retrieve function（打印到 stderr），实际用户需接入自己的检索函数。
+
+---
+
+## SKILL.md 技能文件
+
+12 个章节，覆盖 RAG 全链路：
+1. Pipeline 架构 + 快速决策树
+2. 文档解析方案对比
+3. 分块策略（4 种 + 参数经验值）
+4. 嵌入模型选择（5 个模型 + 查询指令）
+5. 向量存储（4 个方案 + 代码示例）
+6. 混合检索（BM25 + RRF 融合）
+7. Reranker 精排（显存管理）
+8. 查询分解（3 种策略）
+9. RAGAS 评估（v0.2+ API）
+10. 常见陷阱（13 个）
+11. 工具使用
+12. 嵌入模型微调

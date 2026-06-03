@@ -1,234 +1,256 @@
-"""
-测试 fclean CLI 命令行参数解析（直接调用 main 函数，支持 coverage）。
+"""Tests for rag_builder.cli — CLI 命令测试。"""
 
-测试要点：
-1. 子命令解析正确
-2. 版本、帮助输出
-3. init/stats/config 子命令
-4. 错误处理
-"""
+import json
+import sys
+
+from rag_builder.cli import main
+
+# 预定义测试配置字典，避免重复和长行
+VALID_CONFIG = {
+    "chunking": {
+        "strategy": "recursive",
+        "chunk_size": 512,
+        "chunk_overlap": 128,
+        "min_chunk_size": 50,
+    },
+    "embedding": {
+        "model": "bge-base-zh-v1.5",
+        "batch_size": 8,
+        "device": "auto",
+        "normalize": True,
+    },
+    "vector_store": {
+        "backend": "milvus",
+        "collection": "default",
+        "metric": "cosine",
+        "index_type": "HNSW",
+    },
+    "retriever": {
+        "strategy": "hybrid",
+        "top_k": 10,
+        "rerank_top_n": 5,
+        "bm25_weight": 0.3,
+        "vector_weight": 0.7,
+        "reranker_model": "bge-reranker-base",
+    },
+    "query": {
+        "decompose": False,
+        "decompose_strategy": "step_back",
+        "max_sub_queries": 3,
+        "synonym_expansion": True,
+    },
+}
+
+INVALID_CONFIG = {
+    "chunking": {
+        "strategy": "invalid",
+        "chunk_size": 10,
+        "chunk_overlap": -1,
+        "min_chunk_size": 5,
+    },
+    "embedding": {
+        "model": "gpt-4",
+        "batch_size": 0,
+        "device": "tpu",
+        "normalize": True,
+    },
+    "vector_store": {
+        "backend": "pinecone",
+        "collection": "",
+        "metric": "manhattan",
+        "index_type": "IVF_PQ",
+    },
+    "retriever": {
+        "strategy": "dpr",
+        "top_k": 0,
+        "rerank_top_n": 100,
+        "bm25_weight": 2.0,
+        "vector_weight": -1,
+        "reranker_model": "unknown",
+    },
+    "query": {
+        "decompose": False,
+        "decompose_strategy": "tree",
+        "max_sub_queries": 0,
+        "synonym_expansion": True,
+    },
+}
 
 
-import pytest
+def _write_config(path, config):
+    """将配置字典写入 JSON 文件。"""
+    path.write_text(json.dumps(config), encoding="utf-8")
 
-from fclean.cli import build_parser
+
+class TestCLIInit:
+    """init 命令测试。"""
+
+    def test_init_creates_config_file(self, tmp_path):
+        """init 应生成示例配置文件。"""
+        output = tmp_path / "config.json"
+        sys.argv = ["rag-builder", "init", "-o", str(output)]
+        result = main()
+        assert result == 0
+        assert output.exists()
+
+        data = json.loads(output.read_text(encoding="utf-8"))
+        assert "chunking" in data
+        assert "embedding" in data
+        assert "vector_store" in data
+        assert "retriever" in data
+        assert "query" in data
+
+    def test_init_default_output(self, tmp_path, monkeypatch):
+        """init 不指定 -o 时应生成 rag_config.json。"""
+        monkeypatch.chdir(tmp_path)
+        sys.argv = ["rag-builder", "init"]
+        result = main()
+        assert result == 0
+        assert (tmp_path / "rag_config.json").exists()
 
 
-class TestCLIVersion:
-    """测试 --version 参数。"""
+class TestCLIValidate:
+    """validate 命令测试。"""
 
-    def test_version_output(self, capsys):
-        """fclean --version 应输出版本号。"""
-        parser = build_parser()
-        with pytest.raises(SystemExit) as exc:
-            parser.parse_args(["--version"])
-        assert exc.value.code == 0
+    def test_validate_valid_config(self, tmp_path, capsys):
+        """合法配置应通过验证。"""
+        config = tmp_path / "config.json"
+        _write_config(config, VALID_CONFIG)
+
+        sys.argv = ["rag-builder", "validate", str(config)]
+        result = main()
+        assert result == 0
+
         captured = capsys.readouterr()
-        assert "fclean v" in captured.out
+        assert "验证通过" in captured.out
+        assert "GPU 显存估算" in captured.out
 
-    def test_version_short(self, capsys):
-        """fclean -V 也应输出版本号。"""
-        parser = build_parser()
-        with pytest.raises(SystemExit):
-            parser.parse_args(["-V"])
+    def test_validate_invalid_config(self, tmp_path, capsys):
+        """非法配置应报错。"""
+        config = tmp_path / "config.json"
+        _write_config(config, INVALID_CONFIG)
+
+        sys.argv = ["rag-builder", "validate", str(config)]
+        result = main()
+        assert result == 1
+
         captured = capsys.readouterr()
-        assert "fclean v" in captured.out
+        assert "验证失败" in captured.out
 
-    def test_version_contains_v(self, capsys):
-        """输出版本信息。"""
-        parser = build_parser()
-        with pytest.raises(SystemExit):
-            parser.parse_args(["--version"])
+    def test_validate_nonexistent_file(self, capsys):
+        """不存在的文件应报错。"""
+        sys.argv = ["rag-builder", "validate", "/nonexistent/config.json"]
+        result = main()
+        assert result == 1
+
+
+class TestCLIScaffold:
+    """scaffold 命令测试。"""
+
+    def test_scaffold_generates_project(self, tmp_path):
+        """scaffold 应生成项目文件。"""
+        config = tmp_path / "config.json"
+        _write_config(config, VALID_CONFIG)
+
+        output = tmp_path / "output"
+        sys.argv = [
+            "rag-builder", "scaffold", str(config),
+            "-o", str(output), "-n", "test-rag",
+        ]
+        result = main()
+        assert result == 0
+        assert (output / "test-rag" / "ingest.py").exists()
+        assert (output / "test-rag" / "query.py").exists()
+
+    def test_scaffold_invalid_config_fails(self, tmp_path, capsys):
+        """非法配置的 scaffold 应失败。"""
+        config = tmp_path / "config.json"
+        _write_config(config, {"chunking": {"strategy": "invalid"},
+                               "embedding": {"model": "invalid"},
+                               "vector_store": {},
+                               "retriever": {},
+                               "query": {}})
+
+        sys.argv = ["rag-builder", "scaffold", str(config)]
+        result = main()
+        assert result == 1
+
+
+class TestCLIBenchmark:
+    """benchmark 命令测试。"""
+
+    def test_benchmark_runs(self, tmp_path, capsys):
+        """benchmark 命令应正常运行。"""
+        gt = tmp_path / "gt.json"
+        gt.write_text(json.dumps([
+            {"query": "问题1", "expected_texts": ["答案1"]},
+            {"query": "问题2", "expected_texts": ["答案2"]},
+        ]), encoding="utf-8")
+
+        sys.argv = [
+            "rag-builder", "benchmark", str(gt),
+            "--config", "test",
+        ]
+        result = main()
+        assert result == 0
+
         captured = capsys.readouterr()
-        assert "0.6.0" in captured.out
+        assert "RAG Benchmark Report" in captured.out
+        assert "test" in captured.out
+
+    def test_benchmark_json_output(self, tmp_path, capsys):
+        """benchmark --json 应输出合法 JSON。"""
+        gt = tmp_path / "gt.json"
+        gt.write_text(json.dumps([
+            {"query": "q1", "expected_texts": ["a"]},
+        ]), encoding="utf-8")
+
+        sys.argv = ["rag-builder", "benchmark", str(gt), "--json"]
+        result = main()
+        assert result == 0
+
+        captured = capsys.readouterr()
+        data = json.loads(captured.out)
+        assert "num_queries" in data
+        assert data["num_queries"] == 1
+
+    def test_benchmark_with_output_file(self, tmp_path):
+        """benchmark -o 应保存报告到文件。"""
+        gt = tmp_path / "gt.json"
+        gt.write_text(json.dumps([
+            {"query": "q1", "expected_texts": ["a"]},
+        ]), encoding="utf-8")
+
+        report_path = tmp_path / "report.json"
+        sys.argv = [
+            "rag-builder", "benchmark", str(gt),
+            "-o", str(report_path),
+        ]
+        result = main()
+        assert result == 0
+        assert report_path.exists()
+
+    def test_benchmark_nonexistent_gt(self, capsys):
+        """不存在的 ground truth 文件应报错。"""
+        sys.argv = ["rag-builder", "benchmark", "/nonexistent/gt.json"]
+        result = main()
+        assert result == 1
+
+    def test_benchmark_empty_gt(self, tmp_path, capsys):
+        """空 ground truth 应报错。"""
+        gt = tmp_path / "gt.json"
+        gt.write_text("[]", encoding="utf-8")
+
+        sys.argv = ["rag-builder", "benchmark", str(gt)]
+        result = main()
+        assert result == 1
 
 
-class TestCLIHelp:
-    """测试 --help 参数。"""
+class TestCLINoCommand:
+    """无子命令时应显示帮助。"""
 
-    def test_help_contains_prog_name(self):
-        """帮助信息应包含 fclean 程序名。"""
-        parser = build_parser()
-        help_text = parser.format_help()
-        assert "fclean" in help_text
-        assert "init" in help_text
-        assert "stats" in help_text
-
-    def test_help_contains_subcommands(self):
-        """帮助信息应提及子命令。"""
-        parser = build_parser()
-        help_text = parser.format_help()
-        assert "init" in help_text or "stats" in help_text or "config" in help_text
-
-
-class TestCLIInitSubcommand:
-    """测试 init 子命令解析。"""
-
-    def test_init_parses_correctly(self):
-        """fclean init 解析正确。"""
-        parser = build_parser()
-        args = parser.parse_args(["init"])
-        assert args.command == "init"
-
-    def test_init_help(self, capsys):
-        """init --help 可解析。"""
-        parser = build_parser()
-        with pytest.raises(SystemExit):
-            parser.parse_args(["init", "--help"])
-
-
-class TestCLIStatsSubcommand:
-    """测试 stats 子命令解析。"""
-
-    def test_stats_parses_correctly(self):
-        """fclean stats /path 解析正确。"""
-        parser = build_parser()
-        args = parser.parse_args(["stats", "/some/path"])
-        assert args.command == "stats"
-        assert args.arg == "/some/path"
-
-
-class TestCLIConfigSubcommand:
-    """测试 config 子命令解析。"""
-
-    def test_config_parses_correctly(self):
-        """fclean config 解析正确。"""
-        parser = build_parser()
-        args = parser.parse_args(["config"])
-        assert args.command == "config"
-
-
-class TestCLIOrganizePath:
-    """测试直接传路径的 organize 模式。"""
-
-    def test_organize_default_path(self):
-        """fclean ~/Downloads 应正确解析为 organize 模式。"""
-        parser = build_parser()
-        args = parser.parse_args(["/some/path"])
-        assert args.command == "/some/path"
-        # command 不是已知子命令 -> 当作路径
-        assert args.command not in {"init", "stats", "config", "organize"}
-
-    def test_organize_explicit_subcommand(self):
-        """fclean organize /path 应正确解析。"""
-        parser = build_parser()
-        args = parser.parse_args(["organize", "/some/path"])
-        assert args.command == "organize"
-        assert args.arg == "/some/path"
-
-
-class TestCLIUndoHistoryArgs:
-    """测试 undo/history 参数解析。"""
-
-    def test_undo_flag(self):
-        """fclean --undo 应设置 undo=True。"""
-        parser = build_parser()
-        args = parser.parse_args(["--undo"])
-        assert args.undo is True
-
-    def test_history_flag(self):
-        """fclean --history 应设置 history=True。"""
-        parser = build_parser()
-        args = parser.parse_args(["--history"])
-        assert args.history is True
-
-
-class TestCLIExecuteFlag:
-    """测试 --execute 标志。"""
-
-    def test_execute_flag_default(self):
-        """默认 --execute 应为 False。"""
-        parser = build_parser()
-        args = parser.parse_args(["/path"])
-        assert args.execute is False
-
-    def test_execute_flag_set(self):
-        """fclean /path --execute 应设置 execute=True。"""
-        parser = build_parser()
-        args = parser.parse_args(["/path", "--execute"])
-        assert args.execute is True
-
-
-class TestCLIExcludeArgs:
-    """测试排除参数。"""
-
-    def test_exclude_pattern(self):
-        """--exclude '*.tmp' 应正确解析。"""
-        parser = build_parser()
-        args = parser.parse_args(["/path", "--exclude", "*.tmp"])
-        assert "*.tmp" in args.exclude
-
-    def test_exclude_multiple(self):
-        """多次 --exclude 应累积。"""
-        parser = build_parser()
-        args = parser.parse_args(["/path", "--exclude", "*.tmp", "--exclude", "*.log"])
-        assert len(args.exclude) == 2
-
-    def test_exclude_dir(self):
-        """--exclude-dir node_modules 应正确解析。"""
-        parser = build_parser()
-        args = parser.parse_args(["/path", "--exclude-dir", "node_modules"])
-        assert "node_modules" in args.exclude_dirs
-
-
-class TestCLIInitGlobal:
-    """测试 init --global 参数。"""
-
-    def test_init_global_flag(self):
-        """fclean init --global 应设置 global_config=True。"""
-        parser = build_parser()
-        args = parser.parse_args(["init", "--global"])
-        assert args.global_config is True
-
-
-class TestCLIStatsChart:
-    """测试 stats --chart 参数。"""
-
-    def test_chart_flag(self):
-        """fclean stats --chart 应设置 chart=True。"""
-        parser = build_parser()
-        args = parser.parse_args(["stats", "/path", "--chart"])
-        assert args.chart is True
-
-    def test_chart_default_false(self):
-        """默认 chart 应为 False。"""
-        parser = build_parser()
-        args = parser.parse_args(["stats", "/path"])
-        assert args.chart is False
-
-    def test_chart_with_json(self):
-        """--chart 和 --json 可以同时传入（JSON 模式忽略 --chart）。"""
-        parser = build_parser()
-        args = parser.parse_args(["stats", "/path", "--chart", "--json"])
-        assert args.chart is True
-        assert args.json is True
-
-
-class TestCLIStatsTopN:
-    """测试 stats --top N 参数。"""
-
-    def test_top_flag(self):
-        """fclean stats --top 10 应设置 top=10。"""
-        parser = build_parser()
-        args = parser.parse_args(["stats", "/path", "--top", "10"])
-        assert args.top == 10
-
-    def test_top_default_none(self):
-        """默认 top 应为 None。"""
-        parser = build_parser()
-        args = parser.parse_args(["stats", "/path"])
-        assert args.top is None
-
-    def test_top_with_chart(self):
-        """--top 和 --chart 可以同时使用。"""
-        parser = build_parser()
-        args = parser.parse_args(["stats", "/path", "--top", "5", "--chart"])
-        assert args.top == 5
-        assert args.chart is True
-
-    def test_top_with_json(self):
-        """--top 和 --json 可以同时使用。"""
-        parser = build_parser()
-        args = parser.parse_args(["stats", "/path", "--top", "3", "--json"])
-        assert args.top == 3
-        assert args.json is True
+    def test_no_command_shows_help(self, capsys):
+        """无子命令应返回 1 并显示帮助。"""
+        sys.argv = ["rag-builder"]
+        result = main()
+        assert result == 1
