@@ -1,36 +1,56 @@
 # 项目结构
 
 ```
-project/
-├── SKILL.md                        # RAG Builder 技能文件（Hermes Agent 可直接安装）
-├── pyproject.toml                  # 项目配置 + 依赖
-├── src/
-│   └── rag_builder/
-│       ├── __init__.py             # 包初始化，版本号
-│       ├── __main__.py             # CLI 入口（python -m rag_builder）
-│       ├── config_schema.py        # RAG pipeline 配置 schema + 验证 + GPU 显存估算
-│       ├── scaffold.py             # 项目骨架代码生成器
-│       ├── benchmark.py            # 检索质量评估工具 + RAGAS 数据集生成
-│       └── cli.py                  # CLI 命令（init/validate/scaffold/benchmark）
-├── tests/
-│   ├── test_config_schema.py       # 配置验证测试（28 个）
-│   ├── test_scaffold.py            # 骨架生成测试（12 个）
-│   ├── test_benchmark.py           # 评估工具测试（15 个）
-│   └── test_cli.py                 # CLI 命令测试（13 个）
-└── docs/
-    ├── STRUCTURE.md                # 本文件
-    ├── FILES.md                    # 文件功能说明
-    └── CODE.md                     # 核心代码说明
+./.gitignore
+./.ruff_cache/.gitignore
+./.ruff_cache/0.15.15/10195653236098056378
+./.ruff_cache/0.15.15/14303814808973274848
+./.ruff_cache/0.15.15/6460985398272920039
+./.ruff_cache/0.15.15/8619914391599093070
+./.ruff_cache/CACHEDIR.TAG
+./CHANGELOG.md
+./LICENSE
+./README.en.md
+./README.md
+./SKILL.md
+./docs/CODE.md
+./docs/FILES.md
+./docs/STRUCTURE.md
+./pyproject.toml
+./references/chunking-strategies.md
+./references/embedding-models.md
+./references/pdf-parsing.md
+./references/pitfalls.md
+./references/retrieval-methods.md
+./references/vector-stores.md
+./src/rag_builder/__init__.py
+./src/rag_builder/__main__.py
+./src/rag_builder/benchmark.py
+./src/rag_builder/cli.py
+./src/rag_builder/config_schema.py
+./src/rag_builder/diagnose.py
+./src/rag_builder/embeddings.py
+./src/rag_builder/parsers.py
+./src/rag_builder/retriever.py
+./src/rag_builder/scaffold.py
+./src/rag_builder/vector_store.py
+./tests/test_benchmark.py
+./tests/test_cli.py
+./tests/test_config_schema.py
+./tests/test_diagnose.py
+./tests/test_embeddings.py
+./tests/test_integration.py
+./tests/test_parsers.py
+./tests/test_retriever.py
+./tests/test_scaffold.py
+./tests/test_vector_store.py
 ```
 
-## 模块依赖关系
+## 目录说明
 
-```
-cli.py → config_schema.py (RAGConfig, estimate_gpu_vram)
-       → scaffold.py (scaffold_project)
-       → benchmark.py (run_benchmark, load_ground_truth)
-
-scaffold.py → config_schema.py (RAGConfig, EMBEDDING_PRESETS)
-
-benchmark.py (独立模块，不依赖其他内部模块)
-```
+| 目录 | 说明 |
+|------|------|
+| `src/rag_builder/` | 核心 Python 包（11 个模块） |
+| `tests/` | pytest 测试（10 个文件） |
+| `references/` | SKILL.md 拆分出的专题文档（6 个） |
+| `docs/` | 项目自动生成文档 |

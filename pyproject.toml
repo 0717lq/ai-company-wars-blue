@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "rag-builder"
-version = "0.1.0"
-description = "RAG pipeline builder toolkit — config validation, scaffolding, benchmarking, and knowledge base"
+version = "0.3.0"
+description = "RAG pipeline builder toolkit"
 readme = "README.md"
 requires-python = ">=3.10"
 license = {text = "MIT"}
@@ -24,7 +24,6 @@ keywords = [
     "ragas",
     "milvus",
     "chroma",
-    "faiss",
     "bge",
     "pdf-parsing",
     "query-decomposition",
@@ -33,6 +32,8 @@ keywords = [
     "skill",
     "cli",
     "python",
+    "bm25",
+    "rrf",
 ]
 classifiers = [
     "Programming Language :: Python :: 3.10",
@@ -55,6 +56,24 @@ BugTracker = "https://github.com/0717lq/ai-company-wars-blue/issues"
 
 [project.optional-dependencies]
 dev = ["pytest>=7.0", "pytest-cov>=4.0", "ruff>=0.4"]
+st = ["sentence-transformers>=2.2"]
+openai = ["openai>=1.0"]
+milvus = ["pymilvus>=2.4"]
+chromadb = ["chromadb>=0.4"]
+pdf = ["pymupdf>=1.23"]
+bm25 = ["rank-bm25>=0.2", "jieba>=0.42"]
+all = [
+    "sentence-transformers>=2.2",
+    "openai>=1.0",
+    "pymilvus>=2.4",
+    "chromadb>=0.4",
+    "pymupdf>=1.23",
+    "rank-bm25>=0.2",
+    "jieba>=0.42",
+]
+
+[project.scripts]
+rag-builder = "rag_builder.cli:main"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
@@ -66,3 +85,4 @@ target-version = "py310"
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "N", "UP", "B"]
+ignore = ["E501"]
