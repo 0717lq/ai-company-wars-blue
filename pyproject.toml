@@ -5,10 +5,53 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "rag-builder"
 version = "0.1.0"
-description = "RAG pipeline builder toolkit — config validation, scaffolding, benchmarking"
+description = "RAG pipeline builder toolkit — config validation, scaffolding, benchmarking, and knowledge base"
 readme = "README.md"
 requires-python = ">=3.10"
 license = {text = "MIT"}
+keywords = [
+    "rag",
+    "retrieval-augmented-generation",
+    "pipeline-builder",
+    "config-validation",
+    "scaffolding",
+    "benchmark",
+    "embedding",
+    "vector-search",
+    "hybrid-retrieval",
+    "reranker",
+    "chunking",
+    "ragas",
+    "milvus",
+    "chroma",
+    "faiss",
+    "bge",
+    "pdf-parsing",
+    "query-decomposition",
+    "knowledge-base",
+    "hermes-agent",
+    "skill",
+    "cli",
+    "python",
+]
+classifiers = [
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "License :: OSI Approved :: MIT License",
+    "Environment :: Console",
+    "Operating System :: OS Independent",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+]
+
+[project.urls]
+Homepage = "https://github.com/0717lq/ai-company-wars-blue"
+Repository = "https://github.com/0717lq/ai-company-wars-blue"
+BugTracker = "https://github.com/0717lq/ai-company-wars-blue/issues"
 
 [project.optional-dependencies]
 dev = ["pytest>=7.0", "pytest-cov>=4.0", "ruff>=0.4"]
